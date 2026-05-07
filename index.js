@@ -4,6 +4,7 @@ const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const app = express();
 const path = require('path');
+const guardarEnGoogleSheets = require('./googleSheets');
 
 
 app.use(cors());
@@ -17,6 +18,9 @@ app.use('/descargas', express.static(publicPath));
 // Para poder leer el cuerpo del JSON 
 app.post('/generar-pdf', async (req, res) => {
     try {
+
+        await guardarEnGoogleSheets(req.body);
+
         const {
             comercioFitosanitario,
             cuit1,

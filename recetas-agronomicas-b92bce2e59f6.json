@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "recetas-agronomicas",
+  "private_key_id": "b92bce2e59f681561dedd5f741dc4e0a653287db",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDSR1PKwSKGuwu0\nZ1ytZncT/lHLgnlmcOG4ZQ7ho1XNzg6vPue0eud4tlAiAEXSDtsQRaU0EGQEAb9Y\nrRR1bFY06bmeiiNLSE2DimE4+lH9tVQU2LzGTVIVqW7L77h1njk0/kHsWTGWN1zQ\nJ2NwQvoHI6015/L1tOkNeQlwBNMhBwgXmAtCVf3tHvejsTuGZrvC9rMAUUJM+BSc\nEsSMII3HaDscIUGmXrRWVpHxe+UpiGtxn4emGzfIjy4bYbMHBpohtCLWokWY6H8I\nFZa1DFsIuHeNVC8swrWy1rRCb4lgTZxz2YsM+355RSMLIgxyBuIjW0pmsh5j5wzf\nIRn7RIvdAgMBAAECggEAHgibArQYKtcvYkp7FbczXdMuupr9nPCVhMFGYVrzZ+w8\n87HP5VrCkd60Tk7sqgZ+KnJQGMIYjuvy+Qbri6P4IiGZ5feD9/4xOA79OOaj7FFI\nW5vjRo2HollrXkx0c7QwJo4EO24342Uv5/kgPkoKrRde53qkHI0E1mxJuUqvHyHA\nEWLyljGajeIaFeDyC6mKyGsTopWEQxB0Z/wb5lP/2VlpXdAqSQ4VX4vJ8SzRO470\n9BKn011b9otC0Uqj/QfRQ5l0/IqMVs8JlVgWYyL6i97aZrwrkohC39FQt4AV2WJY\nAiaVjuBKeWyznz4m8QNcY/hVo6Tf7ND9E8AHyG0jPwKBgQD2/QfTo2PaD8VyzhHy\n18jrXUB3D1D+NOPpQypdRWM/rORvL/l5Ud0T/bIYdEJWFbqOeCiAKK4O0b3ykJ6/\n+NlpZla/G+sZR+TiNNMwnTyO2raurIB/M0vZ4l6TfrcDxrNCbLvWPFi7fRTL8fTu\nZKpCTSGQfLiYNe1ac21jRgWG7wKBgQDZ82mybXPj9tIrceSymgiyAAFAOxXSOXPI\nOP29IF8jQ/t/Qda+rv52cbCQKZWouG0TKmcn7N5OsdZLwi9y5LiGeSIbu7Z6ntbG\n5CSHA9nC4pvOfvvoyVIsLVdV7Btg+wdCGPxuOnd8azwH17IAQD/+HQMbe2OG3yv0\nHr0z8Kn58wKBgHy3lm0q8y/YiOaI4g1TIxSeWQAFzuseP/u4u7qvYAd2QT9X5Ux6\npv0CPR0WD60yeaqZSDI22HWJObYzisX7XaVYVPNZoKR6ZjxHWmEQ9NRZ4qdfWd9h\nQqr6ILGv6bBRdJFVIKB0hoXeClNVkU2TrVmfYxR3tiq+CGWFJbZcVEwnAoGBAJQA\nz83ytbggbChEd2ExaKY3iqHrfa38hbt5uBUuXmy8RZTtSL7EZthX6+Z51r90Pd29\n9b8PAwe9jCB2BXKoDwaCS785gXlTU9ZMJuHoo3/MErHvWXGDBOIrCBu48f6xeQRR\no1nXKjy7NVC+EIpLFymg2fNXnwZ/loF4PlN/Im4xAoGBAOl+A0xYxeVwF6i0E8m7\nnEwTq77r5Snijl+Y4Tvq9O6uQ3kL6RFni9ytuy1yQIJw/LzRxBfLb9k59BPW9ghL\nWIl2SZbeOwBGf7zqb8nuxEDoZwqnOnpl3WtIvQdk7yGsJ8k0iisSvM530LzZkoaF\nvILa+cqpkoATyOdqR2Rnaoe3\n-----END PRIVATE KEY-----\n",
+  "client_email": "recetas-agronomicas@recetas-agronomicas.iam.gserviceaccount.com",
+  "client_id": "111838698807518445322",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/recetas-agronomicas%40recetas-agronomicas.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
