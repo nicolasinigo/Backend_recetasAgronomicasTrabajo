@@ -1,14 +1,19 @@
 const { google } = require("googleapis");
+const fs = require("fs");
+const path = require("path");
 
 const auth = new google.auth.GoogleAuth({
-    keyFile: "credenciales.json",
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+    keyFile: "recetas-agronomicas-b92bce2e59f6.json",
+    scopes: ["https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
 });
 
 async function guardarEnGoogleSheets(datos) {
 
     const client = await auth.getClient();
 
+    // Instancia de Google Sheets
     const googleSheets = google.sheets({
         version: "v4",
         auth: client
@@ -17,8 +22,15 @@ async function guardarEnGoogleSheets(datos) {
     // ID DEL GOOGLE SHEET
     const spreadsheetId = "1-B3ekbt83Sal1VvsTeIX-zBVrhoYK9l8DVxD2NFbgBg";
 
-    // Número automático de receta
-    const numeroReceta = `REC-${Date.now()}`;
+    const respuesta = await googleSheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: "cantidad de recetas!A2"
+    });
+
+    let numeroReceta = 1;
+    if (respuesta.data.values && respuesta.data.values.length > 0) {
+        numeroReceta = parseInt(respuesta.data.values[0][0]) + 1;
+    }
 
     await googleSheets.spreadsheets.values.append({
 
@@ -32,11 +44,13 @@ async function guardarEnGoogleSheets(datos) {
         resource: {
             values: [[
 
-                // Fecha
+                // Fecha creación receta
                 new Date().toLocaleString(),
 
+                //fecha de aplicación
+                datos.fechaAplicacion,
                 // Asesor
-                "Nicolas Iñigo",
+                datos.asesor,
 
                 // Comercio
                 datos.comercioFitosanitario,
@@ -51,7 +65,7 @@ async function guardarEnGoogleSheets(datos) {
                 datos.cuit2,
 
                 // Número receta
-                "1"
+                numeroReceta
             ]]
         }
 
@@ -60,4 +74,5 @@ async function guardarEnGoogleSheets(datos) {
     return numeroReceta;
 }
 
-module.exports = guardarEnGoogleSheets;
+
+module.exports = { guardarEnGoogleSheets };

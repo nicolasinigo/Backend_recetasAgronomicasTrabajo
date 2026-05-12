@@ -4,7 +4,7 @@ const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const app = express();
 const path = require('path');
-const guardarEnGoogleSheets = require('./googleSheets');
+const { guardarEnGoogleSheets  } = require('./googleSheets');
 
 
 app.use(cors());
@@ -19,15 +19,20 @@ app.use('/descargas', express.static(publicPath));
 app.post('/generar-pdf', async (req, res) => {
     try {
 
-        await guardarEnGoogleSheets(req.body);
+        //guardar en Google Sheets, obtener el número de receta generado y transformarlo a string para dibujarlo en el PDF
+        const numeroReceta = await guardarEnGoogleSheets(req.body);
+        const numeroRecetaStr = numeroReceta.toString();
 
         const {
-            comercioFitosanitario,
+            fechaAplicacion,
+            asesor,
+            empresaProductora,
             cuit1,
-            adquiriente,
+            aplicadora,
             cuit2,
             domicilio,
             predio,
+            gps,
             superficie,
             cultivo,
             diagnostico,
@@ -36,26 +41,26 @@ app.post('/generar-pdf', async (req, res) => {
             agroquimicos
         } = req.body;
 
-        console.log('Agroquímicos recibidos:', agroquimicos);
-
         // 1. leer la plantilla pdf receta_agronomica.pdf 
         const plantillaBytes = fs.readFileSync('receta_agronomica.pdf');
         const pdfDoc = await PDFDocument.load(plantillaBytes);
         const page = pdfDoc.getPage(0);
 
         // 2. Llenar el PDF con los datos recibidos 
-        //page.drawText(numeroReceta, { x: 500, y: 659, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(comercioFitosanitario, { x: 140, y: 634, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(empresaProductora, { x: 140, y: 634, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(cuit1, { x: 403, y: 634, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(adquiriente, { x: 90, y: 609, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(aplicadora, { x: 90, y: 609, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(cuit2, { x: 403, y: 609, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(domicilio, { x: 75, y: 585, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(predio, { x: 176, y: 559, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(superficie, { x: 77, y: 534, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(cultivo, { x: 100, y: 510, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(diagnostico, { x: 84, y: 484, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(tratamiento, { x: 86, y: 459, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(recomendacion, { x: 158, y: 252, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(gps, { x: 78, y: 534, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(superficie, { x: 77, y: 510, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(cultivo, { x: 100, y: 484, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(diagnostico, { x: 84, y: 459, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(tratamiento, { x: 86, y: 434, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(recomendacion, { x: 158, y: 228, size: 12, bold: true, color: rgb(0, 0, 0) });
 
         // Coordenadas base (ajustalas según tu PDF)
         let startY = 400; // altura inicial
@@ -95,15 +100,20 @@ app.post('/generar-pdf', async (req, res) => {
         const pdfResultadoBytes = await pdfDoc.save();
 
         // 3. Guardar el PDF generado en la carpeta 'public' con un nombre único
-        const nombreArchivo = `receta_${comercioFitosanitario}_${Date.now()}.pdf`;
+        const nombreArchivo = `receta_${numeroRecetaStr}_${comercioFitosanitario}_${Date.now()}.pdf`;
         const rutaArchivo = path.join(publicPath, nombreArchivo);
 
         fs.writeFileSync(rutaArchivo, pdfResultadoBytes);
+
         // 4. Devolver la URL de descarga del PDF generado
         const urlDescarga = `http://localhost:3000/descargas/${nombreArchivo}`;
 
         res.json({
+            ok: true,
+
+            // local
             url: urlDescarga,
+
             nombre: nombreArchivo
         });
 
