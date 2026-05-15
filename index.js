@@ -1,29 +1,22 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const app = express();
-const path = require('path');
-const { guardarEnGoogleSheets  } = require('./googleSheets');
-const { sendMail } = require('./enviarEmail');
-
+const { guardarEnGoogleSheets } = require('./googleSheets');
+const { sendMail } = require('./enviarEmail'); // Tu servicio de correo
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // 👈 IMPORTANTE: html2canvas genera un JSON pesado, subí el límite a 50mb
 
-//Crear carpeta 'public' si no existe y servirla de forma estática
-const publicPath = path.join(__dirname, 'public');
-if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath);
-app.use('/descargas', express.static(publicPath));
 
-// Para poder leer el cuerpo del JSON 
 app.post('/generar-pdf', async (req, res) => {
     try {
-
-        //guardar en Google Sheets, obtener el número de receta generado y transformarlo a string para dibujarlo en el PDF
         const numeroReceta = await guardarEnGoogleSheets(req.body);
         const numeroRecetaStr = numeroReceta.toString();
 
+        // Destructuramos también 'email' y 'mapaImagen' del cuerpo 👇
         const {
             fechaAplicacion,
             asesor,
@@ -38,89 +31,118 @@ app.post('/generar-pdf', async (req, res) => {
             cultivo,
             diagnostico,
             recomendacion,
-            agroquimicos
+            agroquimicos,
+            email,       // 👈 Capturado
+            mapaImagen   // 👈 Capturado (String Base64)
         } = req.body;
 
-        // 1. leer la plantilla pdf receta_agronomica.pdf 
+        // --- 1. Lógica del PDF (Se mantiene igual a tu código) ---
         const plantillaBytes = fs.readFileSync('receta_agronomica.pdf');
         const pdfDoc = await PDFDocument.load(plantillaBytes);
         const page = pdfDoc.getPage(0);
 
-        // 2. Llenar el PDF con los datos recibidos 
-        page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(empresaProductora, { x: 140, y: 634, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(cuit1, { x: 403, y: 634, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(aplicadora, { x: 90, y: 609, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(cuit2, { x: 403, y: 609, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(domicilio, { x: 75, y: 585, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(predio, { x: 176, y: 559, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(gps, { x: 78, y: 534, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(superficie, { x: 77, y: 509, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(cultivo, { x: 100, y: 484, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(diagnostico, { x: 84, y: 460, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(recomendacion, { x: 158, y: 227, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12 });
+        page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12 });
+        page.drawText(empresaProductora, { x: 140, y: 634, size: 12 });
+        page.drawText(cuit1, { x: 403, y: 634, size: 12 });
+        page.drawText(aplicadora, { x: 90, y: 609, size: 12 });
+        page.drawText(cuit2, { x: 403, y: 609, size: 12 });
+        page.drawText(domicilio, { x: 75, y: 585, size: 12 });
+        page.drawText(predio, { x: 176, y: 559, size: 12 });
+        page.drawText(gps, { x: 78, y: 534, size: 12 });
+        page.drawText(superficie, { x: 77, y: 509, size: 12 });
+        page.drawText(cultivo, { x: 100, y: 484, size: 12 });
+        page.drawText(diagnostico, { x: 84, y: 460, size: 12 });
+        page.drawText(recomendacion, { x: 158, y: 227, size: 12 });
 
-        // Coordenadas base (ajustalas según tu PDF)
-        let startY = 375; // altura inicial
+        let startY = 375;
         const lineHeight = 15;
-
-        // recorrer agroquímicos
         agroquimicos.forEach((agro, index) => {
-
             const y = startY - (index * lineHeight);
-
-            page.drawText(agro.principioActivo || "", {
-                x: 45,
-                y,
-                size: 12
-            });
-
-            page.drawText(agro.nomencComercial || "", {
-                x: 221,
-                y,
-                size: 12
-            });
-
-            page.drawText(agro.dosis || "", {
-                x: 414,
-                y,
-                size: 12
-            });
-
-            page.drawText(agro.cantidadTotal || "", {
-                x: 499,
-                y,
-                size: 12
-            });
-
+            page.drawText(agro.principioActivo || "", { x: 45, y, size: 12 });
+            page.drawText(agro.nomencComercial || "", { x: 221, y, size: 12 });
+            page.drawText(agro.dosis || "", { x: 414, y, size: 12 });
+            page.drawText(agro.cantidadTotal || "", { x: 499, y, size: 12 });
         });
 
         const pdfResultadoBytes = await pdfDoc.save();
 
-        // 3. Guardar el PDF generado en la carpeta 'public' con un nombre único
-        const nombreArchivo = `receta_${numeroRecetaStr}_${Date.now()}.pdf`;
-        const rutaArchivo = path.join(publicPath, nombreArchivo);
+        // Estructuramos los archivos adjuntos
+        const correoAdjuntos = [
+            {
+                filename: `Receta_Agronomica_${numeroRecetaStr}.pdf`,
+                content: Buffer.from(pdfResultadoBytes), // Adjuntamos los bytes del PDF directamente
+                contentType: 'application/pdf'
+            }
+        ];
 
-        fs.writeFileSync(rutaArchivo, pdfResultadoBytes);
+        // Si el cliente nos mandó la foto del mapa, la procesamos para incrustarla
+        if (mapaImagen) {
+            // Limpiamos el prefijo "data:image/png;base64," del string
+            const base64PureData = mapaImagen.split(';base64,').pop();
 
-        // 4. Devolver la URL de descarga del PDF generado
-        const urlDescarga = `http://localhost:3000/descargas/${nombreArchivo}`;
+            correoAdjuntos.push({
+                filename: `Poligono_Receta_${numeroRecetaStr}.png`,
+                content: base64PureData,
+                encoding: 'base64',
+                cid: 'mapa_poligono_cid' // 👈 Este ID se usa en el <img src="cid:..."/>
+            });
+        }
 
+        // Armamos el cuerpo del correo con formato HTML agradable
+        const cuerpoHtml = `
+            <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
+                <h2 style="color: #2e7d32;">Receta Agronómica de Aplicación N° ${numeroRecetaStr}</h2>
+                <p>Estimado/a, se adjunta la receta formal correspondiente a la aplicación planificada.</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Asesor Técnico:</td><td style="padding: 8px;">${asesor}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Fecha Aplicación:</td><td style="padding: 8px;">${fechaAplicacion}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Predio:</td><td style="padding: 8px;">${predio}</td></tr>
+                    <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivo}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie} ha</td></tr>
+                </table>
+
+                ${mapaImagen ? `
+                    <h3>Croquis y Polígono de Lote:</h3>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <!-- Invocamos la foto adjunta mediante su cid 👇 -->
+                        <img src="cid:mapa_poligono_cid" alt="Mapa del Polígono" style="border: 2px solid #ddd; border-radius: 4px; width: 100%; max-width: 500px;" />
+                    </div>
+                ` : ''}
+
+                <p style="font-size: 12px; color: #777; margin-top: 30px;">
+                    Este es un mensaje automático generado por el Sistema de Recetario Agronómico. Por favor, descargue el documento oficial en PDF adjunto en este mail.
+                </p>
+            </div>
+        `;
+
+        // Enviamos el correo al mail provisto y el mail del .env al mismo tiempo (para que quede constancia en la bandeja de salida)
+        // 1. Creamos un array que arranca con tu propio correo electrónico
+        const listaDestinatarios = [process.env.SMTP_USER];
+
+        // 2. Si el frontend mandó el mail del creador, lo sumamos a la lista
+        if (email && email.trim() !== '') {
+            listaDestinatarios.push(email.trim());
+        }
+        await sendMail({
+            to: listaDestinatarios,
+            subject: `⚠️ Receta Agronómica de Aplicación N° ${numeroRecetaStr} - Predio: ${predio}`,
+            html: cuerpoHtml,
+            attachments: correoAdjuntos // 👈 Enviamos el PDF y el mapa procesado
+        });
+
+        // Responder al Frontend con éxito
         res.json({
             ok: true,
-
-            // local
-            url: urlDescarga,
-
-            nombre: nombreArchivo
+            mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito.`
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).send('Error al generar el PDF');
+        res.status(500).send('Error al generar el PDF o enviar el mail');
     }
 });
 
-app.listen(3000, () => console.log('API lista en http://localhost:3000'));
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`API lista en el puerto ${PORT}`));
