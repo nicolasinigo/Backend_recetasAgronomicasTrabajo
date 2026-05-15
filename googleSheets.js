@@ -49,20 +49,42 @@ async function guardarEnGoogleSheets(datos) {
 
                 //fecha de aplicación
                 datos.fechaAplicacion,
+
                 // Asesor
                 datos.asesor,
 
                 // Comercio
-                datos.comercioFitosanitario,
+                datos.empresaProductora,
 
                 // CUIT comercio
                 datos.cuit1,
 
                 // Adquiriente
-                datos.adquiriente,
+                datos.aplicadora,
 
                 // CUIT adquiriente
                 datos.cuit2,
+
+                //domicilio
+                datos.domicilio,
+
+                //localización del predio tratado
+                datos.predio,
+
+                //punto GPS
+                datos.gps,
+
+                //superficie
+                datos.superficie,
+
+                //polígono del campo
+                JSON.stringify(datos.poligono),
+
+                //cultivo a tratar
+                datos.cultivo,
+
+                //diagnóstico
+                datos.diagnostico,
 
                 // Número receta
                 numeroReceta

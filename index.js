@@ -5,6 +5,7 @@ const fs = require('fs');
 const app = express();
 const path = require('path');
 const { guardarEnGoogleSheets  } = require('./googleSheets');
+const { sendMail } = require('./enviarEmail');
 
 
 app.use(cors());
@@ -36,7 +37,6 @@ app.post('/generar-pdf', async (req, res) => {
             superficie,
             cultivo,
             diagnostico,
-            tratamiento,
             recomendacion,
             agroquimicos
         } = req.body;
@@ -56,14 +56,13 @@ app.post('/generar-pdf', async (req, res) => {
         page.drawText(domicilio, { x: 75, y: 585, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(predio, { x: 176, y: 559, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(gps, { x: 78, y: 534, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(superficie, { x: 77, y: 510, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(superficie, { x: 77, y: 509, size: 12, bold: true, color: rgb(0, 0, 0) });
         page.drawText(cultivo, { x: 100, y: 484, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(diagnostico, { x: 84, y: 459, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(tratamiento, { x: 86, y: 434, size: 12, bold: true, color: rgb(0, 0, 0) });
-        page.drawText(recomendacion, { x: 158, y: 228, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(diagnostico, { x: 84, y: 460, size: 12, bold: true, color: rgb(0, 0, 0) });
+        page.drawText(recomendacion, { x: 158, y: 227, size: 12, bold: true, color: rgb(0, 0, 0) });
 
         // Coordenadas base (ajustalas según tu PDF)
-        let startY = 400; // altura inicial
+        let startY = 375; // altura inicial
         const lineHeight = 15;
 
         // recorrer agroquímicos
@@ -100,7 +99,7 @@ app.post('/generar-pdf', async (req, res) => {
         const pdfResultadoBytes = await pdfDoc.save();
 
         // 3. Guardar el PDF generado en la carpeta 'public' con un nombre único
-        const nombreArchivo = `receta_${numeroRecetaStr}_${comercioFitosanitario}_${Date.now()}.pdf`;
+        const nombreArchivo = `receta_${numeroRecetaStr}_${Date.now()}.pdf`;
         const rutaArchivo = path.join(publicPath, nombreArchivo);
 
         fs.writeFileSync(rutaArchivo, pdfResultadoBytes);
