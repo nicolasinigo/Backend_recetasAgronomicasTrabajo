@@ -53,17 +53,35 @@ async function guardarEnGoogleSheets(datos) {
                 // Asesor
                 datos.asesor,
 
+                // Cuit asesor
+                datos.cuit1,
+
                 // Comercio
                 datos.empresaProductora,
 
                 // CUIT comercio
-                datos.cuit1,
+                datos.cuit2,
 
                 // Adquiriente
                 datos.aplicadora,
 
+                // Categoria Aplicadora
+                datos.categoriaAplicadora,
+
                 // CUIT adquiriente
-                datos.cuit2,
+                datos.cuit3,
+
+                // Piloto
+                datos.piloto,
+
+                // CUIT piloto
+                datos.cuit4,
+
+                // Tipo de máquina
+                datos.tipoMaquina,
+
+                // Matrícula de la máquina
+                datos.Matricula,
 
                 //domicilio
                 datos.domicilio,

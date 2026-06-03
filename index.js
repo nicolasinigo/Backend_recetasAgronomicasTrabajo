@@ -20,10 +20,16 @@ app.post('/generar-pdf', async (req, res) => {
         const {
             fechaAplicacion,
             asesor,
-            empresaProductora,
             cuit1,
-            aplicadora,
+            empresaProductora,
             cuit2,
+            aplicadora,
+            categoriaAplicadora,
+            cuit3,
+            piloto,
+            cuit4,
+            tipoMaquina,
+            Matricula,
             domicilio,
             predio,
             gps,
@@ -32,7 +38,9 @@ app.post('/generar-pdf', async (req, res) => {
             diagnostico,
             recomendacion,
             agroquimicos,
-            email,       // 👈 Capturado
+            emailEmpresa,       // 👈 Capturado
+            emailAsesor,        // 👈 Capturado
+            emailPiloto,        // 👈 Capturado
             mapaImagen   // 👈 Capturado (String Base64)
         } = req.body;
 
@@ -43,19 +51,26 @@ app.post('/generar-pdf', async (req, res) => {
 
         page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12 });
         page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12 });
-        page.drawText(empresaProductora, { x: 140, y: 634, size: 12 });
+        page.drawText(asesor, { x: 100, y: 634, size: 12 });
         page.drawText(cuit1, { x: 403, y: 634, size: 12 });
-        page.drawText(aplicadora, { x: 90, y: 609, size: 12 });
+        page.drawText(empresaProductora, { x: 130, y: 609, size: 12 });
         page.drawText(cuit2, { x: 403, y: 609, size: 12 });
-        page.drawText(domicilio, { x: 75, y: 585, size: 12 });
-        page.drawText(predio, { x: 176, y: 559, size: 12 });
-        page.drawText(gps, { x: 78, y: 534, size: 12 });
-        page.drawText(superficie, { x: 77, y: 509, size: 12 });
-        page.drawText(cultivo, { x: 100, y: 484, size: 12 });
-        page.drawText(diagnostico, { x: 84, y: 460, size: 12 });
-        page.drawText(recomendacion, { x: 158, y: 227, size: 12 });
+        page.drawText(aplicadora, { x: 85, y: 584, size: 12 });
+        page.drawText(cuit3, { x: 403, y: 584, size: 12 });
+        page.drawText(categoriaAplicadora, { x: 80, y: 559, size: 12 });
+        page.drawText(piloto, { x: 110, y: 535, size: 12 });
+        page.drawText(cuit4, { x: 403, y: 535, size: 12 });
+        page.drawText(tipoMaquina, { x: 120, y: 509, size: 12 });
+        page.drawText(Matricula, { x: 403, y: 509, size: 12 });
+        page.drawText(domicilio, { x: 74, y: 484, size: 12 });
+        page.drawText(predio, { x: 175, y: 460, size: 12 });
+        page.drawText(gps, { x: 403, y: 459, size: 12 });
+        page.drawText(superficie, { x: 77, y: 435, size: 12 });
+        page.drawText(cultivo, { x: 100, y: 410, size: 12 });
+        page.drawText(diagnostico, { x: 403, y: 409, size: 12 });
+        page.drawText(recomendacion, { x: 158, y: 178, size: 12 });
 
-        let startY = 375;
+        let startY = 328;
         const lineHeight = 15;
         agroquimicos.forEach((agro, index) => {
             const y = startY - (index * lineHeight);
@@ -96,11 +111,15 @@ app.post('/generar-pdf', async (req, res) => {
                 <p>Estimado/a, se adjunta la receta formal correspondiente a la aplicación planificada.</p>
                 
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Asesor Técnico:</td><td style="padding: 8px;">${asesor}</td></tr>
                     <tr><td style="padding: 8px; font-weight: bold;">Fecha Aplicación:</td><td style="padding: 8px;">${fechaAplicacion}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Asesor Técnico:</td><td style="padding: 8px;">${asesor}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Productora:</td><td style="padding: 8px;">${empresaProductora}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Aplicadora:</td><td style="padding: 8px;">${aplicadora}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Piloto:</td><td style="padding: 8px;">${piloto}</td></tr>
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Predio:</td><td style="padding: 8px;">${predio}</td></tr>
                     <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivo}</td></tr>
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie} ha</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Tipo de Máquina:</td><td style="padding: 8px;">${tipoMaquina}</td></tr>
                 </table>
 
                 ${mapaImagen ? `
@@ -122,8 +141,10 @@ app.post('/generar-pdf', async (req, res) => {
         const listaDestinatarios = [process.env.SMTP_USER];
 
         // 2. Si el frontend mandó el mail del creador, lo sumamos a la lista
-        if (email && email.trim() !== '') {
-            listaDestinatarios.push(email.trim());
+        if (emailEmpresa && emailEmpresa.trim() !== '' && emailAsesor && emailAsesor.trim() !== '' && emailPiloto && emailPiloto.trim() !== '') {
+            listaDestinatarios.push(emailEmpresa.trim());
+            listaDestinatarios.push(emailAsesor.trim());
+            listaDestinatarios.push(emailPiloto.trim());
         }
         await sendMail({
             to: listaDestinatarios,
