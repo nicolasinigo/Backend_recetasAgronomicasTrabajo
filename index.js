@@ -156,7 +156,7 @@ app.post('/generar-pdf', async (req, res) => {
         // Responder al Frontend con éxito
         res.json({
             ok: true,
-            mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito.`
+            mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito.Se envió una copia a ${emailEmpresa}, ${emailAsesor} y ${emailPiloto}.`
         });
 
     } catch (error) {
