@@ -6,10 +6,15 @@ const fs = require('fs');
 const app = express();
 const { guardarEnGoogleSheets } = require('./googleSheets');
 const { sendMail } = require('./enviarEmail'); // Tu servicio de correo
+const path = require('path');
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // 👈 IMPORTANTE: html2canvas genera un JSON pesado, subí el límite a 50mb
+app.use(express.static(path.join(__dirname, 'public/dist'))); // Servimos archivos estáticos desde la carpeta 'public/dist'
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
+});
 
 app.post('/generar-pdf', async (req, res) => {
     try {
