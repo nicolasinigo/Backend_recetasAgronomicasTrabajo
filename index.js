@@ -71,10 +71,12 @@ app.post('/generar-pdf', async (req, res) => {
                 piloto,
                 cuit4,
                 tipoMaquina,
+                modelo,
                 Matricula,
                 domicilio,
                 predio,
-                gps,
+                latitud,
+                longitud,
                 superficie,
                 cultivo,
                 diagnostico,
@@ -91,6 +93,9 @@ app.post('/generar-pdf', async (req, res) => {
             const pdfDoc = await PDFDocument.load(plantillaBytes);
             const page = pdfDoc.getPage(0);
 
+            const tipoMaquinaModelo = `${tipoMaquina}-${modelo}`.trim();
+            const gps = `Lat: ${latitud}, Lon: ${longitud}`.trim();
+
             page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12 });
             page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12 });
             page.drawText(asesor, { x: 100, y: 634, size: 12 });
@@ -102,7 +107,7 @@ app.post('/generar-pdf', async (req, res) => {
             page.drawText(categoriaAplicadora, { x: 80, y: 559, size: 12 });
             page.drawText(piloto, { x: 110, y: 535, size: 12 });
             page.drawText(cuit4, { x: 403, y: 535, size: 12 });
-            page.drawText(tipoMaquina, { x: 120, y: 509, size: 12 });
+            page.drawText(tipoMaquinaModelo, { x: 120, y: 509, size: 12 });
             page.drawText(Matricula, { x: 403, y: 509, size: 12 });
             page.drawText(domicilio, { x: 74, y: 484, size: 12 });
             page.drawText(predio, { x: 175, y: 460, size: 12 });
@@ -161,7 +166,7 @@ app.post('/generar-pdf', async (req, res) => {
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Predio:</td><td style="padding: 8px;">${predio}</td></tr>
                     <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivo}</td></tr>
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie}</td></tr>
-                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Tipo de Máquina:</td><td style="padding: 8px;">${tipoMaquina}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Tipo de Máquina:</td><td style="padding: 8px;">${tipoMaquinaModelo}</td></tr>
                 </table>
 
                 ${mapaImagen ? `
