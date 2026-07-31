@@ -61,14 +61,16 @@ app.post('/generar-pdf', async (req, res) => {
             // Destructuramos también 'email' y 'mapaImagen' del cuerpo 👇
             const {
                 fechaAplicacion,
-                asesor,
+                asesorApellido,
+                asesorNombres,
                 cuit1,
                 empresaProductora,
                 cuit2,
                 aplicadora,
                 categoriaAplicadora,
                 cuit3,
-                piloto,
+                pilotoApellido,
+                pilotoNombres,
                 cuit4,
                 tipoMaquina,
                 modelo,
@@ -93,6 +95,8 @@ app.post('/generar-pdf', async (req, res) => {
             const pdfDoc = await PDFDocument.load(plantillaBytes);
             const page = pdfDoc.getPage(0);
 
+            const asesor = `${asesorApellido} ${asesorNombres}`.trim();
+            const piloto = `${pilotoApellido} ${pilotoNombres}`.trim();
             const tipoMaquinaModelo = `${tipoMaquina}-${modelo}`.trim();
             const gps = `Lat: ${latitud}, Lon: ${longitud}`.trim();
 
@@ -123,8 +127,8 @@ app.post('/generar-pdf', async (req, res) => {
                 const y = startY - (index * lineHeight);
                 page.drawText(agro.principioActivo || "", { x: 45, y, size: 12 });
                 page.drawText(agro.nomencComercial || "", { x: 221, y, size: 12 });
-                page.drawText(agro.dosis || "", { x: 414, y, size: 12 });
-                page.drawText(agro.cantidadTotal || "", { x: 499, y, size: 12 });
+                page.drawText(agro.dosis + "ml" || "", { x: 414, y, size: 12 });
+                page.drawText(agro.cantidadTotal + "lt" || "", { x: 499, y, size: 12 });
             });
 
             const pdfResultadoBytes = await pdfDoc.save();

@@ -55,8 +55,8 @@ async function guardarEnGoogleSheets(datos) {
                 //fecha de aplicación
                 datos.fechaAplicacion,
 
-                // Asesor
-                datos.asesor,
+                // Apellido + Nombres del asesor
+                `${datos.asesorApellido} ${datos.asesorNombres}`,
 
                 // Cuit asesor
                 datos.cuit1,
@@ -76,8 +76,8 @@ async function guardarEnGoogleSheets(datos) {
                 // CUIT adquiriente
                 datos.cuit3,
 
-                // Piloto
-                datos.piloto,
+                // Piloto (Apellido + Nombres)
+                `${datos.pilotoApellido} ${datos.pilotoNombres}`,
 
                 // CUIT piloto
                 datos.cuit4,
@@ -94,8 +94,11 @@ async function guardarEnGoogleSheets(datos) {
                 //localización del predio tratado
                 datos.predio,
 
-                //punto GPS
-                datos.gps,
+                //Latitud
+                datos.latitud,
+
+                //Longitud
+                datos.longitud,
 
                 //superficie
                 datos.superficie,
