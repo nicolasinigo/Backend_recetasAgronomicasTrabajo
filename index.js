@@ -116,7 +116,7 @@ app.post('/generar-pdf', async (req, res) => {
             page.drawText(domicilio, { x: 74, y: 484, size: 12 });
             page.drawText(predio, { x: 175, y: 460, size: 12 });
             page.drawText(gps, { x: 403, y: 459, size: 12 });
-            page.drawText(superficie, { x: 77, y: 435, size: 12 });
+            page.drawText(superficie + " km²", { x: 77, y: 435, size: 12 });
             page.drawText(cultivo, { x: 100, y: 410, size: 12 });
             page.drawText(diagnostico, { x: 403, y: 409, size: 12 });
             page.drawText(recomendacion, { x: 158, y: 178, size: 12 });
@@ -127,8 +127,8 @@ app.post('/generar-pdf', async (req, res) => {
                 const y = startY - (index * lineHeight);
                 page.drawText(agro.principioActivo || "", { x: 45, y, size: 12 });
                 page.drawText(agro.nomencComercial || "", { x: 221, y, size: 12 });
-                page.drawText(agro.dosis + "ml" || "", { x: 414, y, size: 12 });
-                page.drawText(agro.cantidadTotal + "lt" || "", { x: 499, y, size: 12 });
+                page.drawText(agro.dosis + " ml" || "", { x: 414, y, size: 12 });
+                page.drawText(agro.cantidadTotal + " lt" || "", { x: 499, y, size: 12 });
             });
 
             const pdfResultadoBytes = await pdfDoc.save();
@@ -169,7 +169,7 @@ app.post('/generar-pdf', async (req, res) => {
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Piloto:</td><td style="padding: 8px;">${piloto}</td></tr>
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Predio:</td><td style="padding: 8px;">${predio}</td></tr>
                     <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivo}</td></tr>
-                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie}</td></tr>
+                    <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie} km²</td></tr>
                     <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Tipo de Máquina:</td><td style="padding: 8px;">${tipoMaquinaModelo}</td></tr>
                 </table>
 
