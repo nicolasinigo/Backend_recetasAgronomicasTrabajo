@@ -95,40 +95,40 @@ app.post('/generar-pdf', async (req, res) => {
             const pdfDoc = await PDFDocument.load(plantillaBytes);
             const page = pdfDoc.getPage(0);
 
-            const asesor = `${asesorApellido} ${asesorNombres}`.trim();
-            const piloto = `${pilotoApellido} ${pilotoNombres}`.trim();
-            const tipoMaquinaModelo = `${tipoMaquina}-${modelo}`.trim();
-            const gps = `Lat: ${latitud}, Lon: ${longitud}`.trim();
+            const asesor = `${asesorApellido || ""} ${asesorNombres || ""}`.trim();
+            const piloto = `${pilotoApellido || ""} ${pilotoNombres || ""}`.trim();
+            const tipoMaquinaModelo = `${tipoMaquina || ""}-${modelo || ""}`.trim();
+            const gps = `Lat: ${latitud || ""}, Lon: ${longitud || ""}`.trim();
 
-            page.drawText(fechaAplicacion, { x: 450, y: 709, size: 12 });
-            page.drawText(numeroRecetaStr, { x: 500, y: 659, size: 12 });
-            page.drawText(asesor, { x: 100, y: 634, size: 12 });
-            page.drawText(cuit1, { x: 403, y: 634, size: 12 });
-            page.drawText(empresaProductora, { x: 130, y: 609, size: 12 });
-            page.drawText(cuit2, { x: 403, y: 609, size: 12 });
-            page.drawText(aplicadora, { x: 85, y: 584, size: 12 });
-            page.drawText(cuit3, { x: 403, y: 584, size: 12 });
-            page.drawText(categoriaAplicadora, { x: 80, y: 559, size: 12 });
-            page.drawText(piloto, { x: 110, y: 535, size: 12 });
-            page.drawText(cuit4, { x: 403, y: 535, size: 12 });
-            page.drawText(tipoMaquinaModelo, { x: 120, y: 509, size: 12 });
-            page.drawText(Matricula, { x: 403, y: 509, size: 12 });
-            page.drawText(domicilio, { x: 74, y: 484, size: 12 });
-            page.drawText(predio, { x: 175, y: 460, size: 12 });
-            page.drawText(gps, { x: 403, y: 459, size: 12 });
-            page.drawText(superficie + " km²", { x: 77, y: 435, size: 12 });
-            page.drawText(cultivo, { x: 100, y: 410, size: 12 });
-            page.drawText(diagnostico, { x: 403, y: 409, size: 12 });
-            page.drawText(recomendacion, { x: 158, y: 178, size: 12 });
+            page.drawText(String(fechaAplicacion || ""), { x: 450, y: 709, size: 12 });
+            page.drawText(String(numeroRecetaStr || ""), { x: 500, y: 659, size: 12 });
+            page.drawText(String(asesor || ""), { x: 100, y: 634, size: 12 });
+            page.drawText(String(cuit1 || ""), { x: 403, y: 634, size: 12 });
+            page.drawText(String(empresaProductora || ""), { x: 130, y: 609, size: 12 });
+            page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
+            page.drawText(String(aplicadora || ""), { x: 85, y: 584, size: 12 });
+            page.drawText(String(cuit3 || ""), { x: 403, y: 584, size: 12 });
+            page.drawText(String(categoriaAplicadora || ""), { x: 80, y: 559, size: 12 });
+            page.drawText(String(piloto || ""), { x: 110, y: 535, size: 12 });
+            page.drawText(String(cuit4 || ""), { x: 403, y: 535, size: 12 });
+            page.drawText(String(tipoMaquinaModelo || ""), { x: 120, y: 509, size: 12 });
+            page.drawText(String(Matricula || ""), { x: 403, y: 509, size: 12 });
+            page.drawText(String(domicilio || ""), { x: 74, y: 484, size: 12 });
+            page.drawText(String(predio || ""), { x: 175, y: 460, size: 12 });
+            page.drawText(String(gps || ""), { x: 403, y: 459, size: 12 });
+            page.drawText(String(superficie || "") + " km²", { x: 77, y: 435, size: 12 });
+            page.drawText(String(cultivo || ""), { x: 100, y: 410, size: 12 });
+            page.drawText(String(diagnostico || ""), { x: 403, y: 409, size: 12 });
+            page.drawText(String(recomendacion || ""), { x: 158, y: 178, size: 12 });
 
             let startY = 328;
             const lineHeight = 15;
             agroquimicos.forEach((agro, index) => {
                 const y = startY - (index * lineHeight);
-                page.drawText(agro.principioActivo || "", { x: 45, y, size: 12 });
-                page.drawText(agro.nomencComercial || "", { x: 221, y, size: 12 });
-                page.drawText(agro.dosis + " ml" || "", { x: 414, y, size: 12 });
-                page.drawText(agro.cantidadTotal + " lt" || "", { x: 499, y, size: 12 });
+                page.drawText(String(agro.principioActivo || ""), { x: 45, y, size: 12 });
+                page.drawText(String(agro.nomencComercial || ""), { x: 221, y, size: 12 });
+                page.drawText(String(agro.dosis || "") + " ml", { x: 414, y, size: 12 });
+                page.drawText(String(agro.cantidadTotal || "") + " lt", { x: 499, y, size: 12 });
             });
 
             const pdfResultadoBytes = await pdfDoc.save();
