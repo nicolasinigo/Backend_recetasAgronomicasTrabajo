@@ -21,7 +21,7 @@ app.get(/^(?!\/generar-pdf).+/, (req, res) => {
 app.post('/generar-pdf', async (req, res) => {
 
     try {
-        const { captchaToken } = req.body;
+        const { captchaToken, ...datosFormulario } = req.body;
 
         // 1. Verificar que venga el token
         if (!captchaToken) {
@@ -47,7 +47,7 @@ app.post('/generar-pdf', async (req, res) => {
 
         // 3. Verificar respuesta
         if (!response.data.success) {
-            return res.status(400).json({
+            return res.status(403).json({
                 ok: false,
                 mensaje: "Captcha inválido"
             });
