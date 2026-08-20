@@ -58,6 +58,9 @@ async function guardarEnGoogleSheets(datos) {
                 // Apellido + Nombres del asesor
                 `${datos.asesorApellido} ${datos.asesorNombres}`,
 
+                // Email asesor
+                datos.emailAsesor,
+
                 // Cuit asesor
                 datos.cuit1,
 

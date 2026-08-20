@@ -84,9 +84,7 @@ app.post('/generar-pdf', async (req, res) => {
                 diagnostico,
                 recomendacion,
                 agroquimicos,
-                emailEmpresa,       // 👈 Capturado
                 emailAsesor,        // 👈 Capturado
-                emailPiloto,        // 👈 Capturado
                 mapaImagen   // 👈 Capturado (String Base64)
             } = req.body;
 
@@ -191,10 +189,8 @@ app.post('/generar-pdf', async (req, res) => {
             // 1. Creamos un array que arranca con tu propio correo electrónico
             const listaDestinatarios = [process.env.SMTP_USER];
 
-            // 2. Si el frontend nos pasó los mails de empresa, asesor y piloto, los agregamos a la lista, si no llego el mail del piloto, no lo agregamos
-            if (emailEmpresa && emailEmpresa.trim() !== '') listaDestinatarios.push(emailEmpresa.trim());
+            // 2. Agregamos el correo del asesor si es válido y no está vacío
             if (emailAsesor && emailAsesor.trim() !== '') listaDestinatarios.push(emailAsesor.trim());
-            if (emailPiloto && emailPiloto.trim() !== '') listaDestinatarios.push(emailPiloto.trim());
 
             await sendMail({
                 to: listaDestinatarios,
@@ -206,7 +202,7 @@ app.post('/generar-pdf', async (req, res) => {
             // Responder al Frontend con éxito
             res.json({
                 ok: true,
-                mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito.Se envió una copia a ${emailEmpresa}, ${emailAsesor} y ${emailPiloto}.`
+                mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito.Se envió a ${emailAsesor}.`
             });
 
         } catch (error) {
