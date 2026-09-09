@@ -116,7 +116,13 @@ async function guardarEnGoogleSheets(datos) {
                 datos.diagnostico,
 
                 // Número receta
-                numeroReceta
+                numeroReceta,
+
+                //Estado
+                "Pendiente",
+
+                // Fecha límite = fecha de aplicación + 3 días    
+                new Date(new Date(datos.fechaAplicacion).getTime() +  3 * 24 * 60 * 60 * 1000).toLocaleString()         
             ]]
         }
 
