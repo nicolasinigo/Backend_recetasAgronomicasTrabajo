@@ -138,7 +138,7 @@ const generarRecetaPdf = async (req, res) => {
     }
 
     // Enviar el correo electrónico con la receta y el enlace de confirmación
-    const linkConfirmacion = `${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
+    const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
     //const linkConfirmacion = `http://localhost:3000/Receta/${numeroRecetaStr}`
 
     const cuerpoHtml = `

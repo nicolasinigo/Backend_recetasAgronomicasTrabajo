@@ -53,7 +53,7 @@ async function guardarEnGoogleSheets(datos) {
                 new Date().toLocaleString(),
 
                 //fecha de aplicación
-                datos.fechaAplicacion,
+                new Date(datos.fechaAplicacion).toLocaleDateString(),
 
                 // Apellido + Nombres del asesor
                 `${datos.asesorApellido} ${datos.asesorNombres}`,
@@ -121,8 +121,8 @@ async function guardarEnGoogleSheets(datos) {
                 //Estado
                 "Pendiente",
 
-                // Fecha límite = fecha de aplicación + 3 días    
-                new Date(new Date(datos.fechaAplicacion).getTime() +  3 * 24 * 60 * 60 * 1000).toLocaleString()         
+                // Fecha límite = fecha de aplicación + 2 días    
+                new Date(new Date(datos.fechaAplicacion).getTime() +  2 * 24 * 60 * 60 * 1000).toLocaleDateString()         
             ]]
         }
 
