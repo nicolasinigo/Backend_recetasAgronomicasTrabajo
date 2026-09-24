@@ -5,6 +5,7 @@ const path = require('path');
 
 const recetaRoutes = require('./routers/recetaRouter');
 const confirmacionRoutes = require('./routers/confirmacionRouter');
+const recetaComercializadoraRoutes = require('./routers/recetaComercializadoraRouter');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.static(path.join(__dirname, 'public/dist'))); // Servimos archiv
 
 app.use('/', recetaRoutes);
 app.use('/', confirmacionRoutes);
+app.use('/', recetaComercializadoraRoutes);
 app.get(/^(?!\/generar-pdf).+/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
 });

@@ -171,8 +171,8 @@ const generarRecetaPdf = async (req, res) => {
       </div>
     `;
 
-    // Enviar el correo electrónico a los destinatarios
-    const listaDestinatarios = [process.env.SMTP_USER];
+    // Enviar el correo electrónico a la dirección proporcionada en el formulario
+    const listaDestinatarios = [];
     if (emailAsesor && emailAsesor.trim() !== '') listaDestinatarios.push(emailAsesor.trim());
 
     await sendMail({
