@@ -37,6 +37,11 @@ async function guardarEnGoogleSheets(datos) {
         numeroReceta = parseInt(respuesta.data.values[0][0]) + 1;
     }
 
+    //crear un rango de fech desde la fecha de creacion hasta 7 dias despues, con este formato: "dd/mm - dd/mm/yyyy"
+    const fechaCreacion = new Date();
+    const fechaLimite = new Date(fechaCreacion.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const fechaAplicacion = `${fechaCreacion.getDate().toString().padStart(2, '0')}/${(fechaCreacion.getMonth() + 1).toString().padStart(2, '0')} - ${fechaLimite.getDate().toString().padStart(2, '0')}/${(fechaLimite.getMonth() + 1).toString().padStart(2, '0')}/${fechaLimite.getFullYear()}`;
+
     await googleSheets.spreadsheets.values.append({
 
         spreadsheetId,
@@ -51,9 +56,6 @@ async function guardarEnGoogleSheets(datos) {
 
                 // Fecha creación receta
                 new Date().toLocaleString(),
-
-                //fecha de aplicación
-                new Date(datos.fechaAplicacion).toLocaleDateString(),
 
                 // Apellido + Nombres del asesor
                 `${datos.asesorApellido} ${datos.asesorNombres}`,
@@ -117,12 +119,12 @@ async function guardarEnGoogleSheets(datos) {
 
                 // Número receta
                 numeroReceta,
+                
+                // Rango de fechas para realizar la aplicación
+                fechaAplicacion,        
 
                 //Estado
                 "Pendiente",
-
-                // Fecha límite = fecha de aplicación + 2 días    
-                new Date(new Date(datos.fechaAplicacion).getTime() +  2 * 24 * 60 * 60 * 1000).toLocaleDateString()         
             ]]
         }
 

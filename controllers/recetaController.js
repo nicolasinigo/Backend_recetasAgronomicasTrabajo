@@ -44,7 +44,6 @@ const generarRecetaPdf = async (req, res) => {
 
     // Generar el PDF con los datos del formulario
     const {
-      fechaAplicacion,
       asesorApellido,
       asesorNombres,
       cuit1,
@@ -82,7 +81,13 @@ const generarRecetaPdf = async (req, res) => {
     const tipoMaquinaModelo = `${tipoMaquina || ""}-${modelo || ""}`.trim();
     const gps = `Lat: ${latitud || ""}, Lon: ${longitud || ""}`.trim();
 
+    //crear un rango de fech desde la fecha de creacion hasta 7 dias despues, con este formato: "dd/mm - dd/mm/yyyy"
+    const fechaCreacion = new Date();
+    const fechaLimite = new Date(fechaCreacion.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const fechaAplicacion = `${fechaCreacion.getDate().toString().padStart(2, '0')}/${(fechaCreacion.getMonth() + 1).toString().padStart(2, '0')} - ${fechaLimite.getDate().toString().padStart(2, '0')}/${(fechaLimite.getMonth() + 1).toString().padStart(2, '0')}/${fechaLimite.getFullYear()}`;
+
     page.drawText(String(fechaAplicacion || ""), { x: 450, y: 709, size: 12 });
+
     page.drawText(String(numeroRecetaStr || ""), { x: 500, y: 659, size: 12 });
     page.drawText(String(asesor || ""), { x: 100, y: 634, size: 12 });
     page.drawText(String(cuit1 || ""), { x: 403, y: 634, size: 12 });
@@ -138,8 +143,8 @@ const generarRecetaPdf = async (req, res) => {
     }
 
     // Enviar el correo electrónico con la receta y el enlace de confirmación
-    const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
-    //const linkConfirmacion = `http://localhost:3000/Receta/${numeroRecetaStr}`
+    //const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
+    const linkConfirmacion = `http://localhost:3000/Receta/${numeroRecetaStr}`
 
     const cuerpoHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
@@ -149,7 +154,7 @@ const generarRecetaPdf = async (req, res) => {
         <a href="${linkConfirmacion}" style="background-color: #2e7d32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Confirmar Receta</a>
         <h3 style="margin-top: 20px;">Detalles de la Aplicación:</h3>
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-            <tr><td style="padding: 8px; font-weight: bold;">Fecha Aplicación:</td><td style="padding: 8px;">${fechaAplicacion}</td></tr>
+            <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Rango de Fechas para realizar la aplicación:</td><td style="padding: 8px;">${fechaAplicacion}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Asesor Técnico:</td><td style="padding: 8px;">${asesor}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Productora:</td><td style="padding: 8px;">${empresaProductora}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Aplicadora:</td><td style="padding: 8px;">${aplicadora}</td></tr>

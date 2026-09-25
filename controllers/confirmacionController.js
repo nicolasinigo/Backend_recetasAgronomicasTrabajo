@@ -31,7 +31,7 @@ const confirmarReceta = async (req, res) => {
         // Leer los datos de la hoja "Registro" para encontrar la fila correspondiente al ID de la receta
         const respuesta = await googleSheets.spreadsheets.values.get({
             spreadsheetId,
-            range: "Registro!W2:Y"
+            range: "Registro!V2:Y"
         });
 
         // Verificar si se encontraron filas en la hoja
@@ -42,15 +42,14 @@ const confirmarReceta = async (req, res) => {
 
         let numeroFilaEncontrada = -1;
         let estadoActual = "";
-        let fechaLimiteStr = "";
 
         // Buscar la fila correspondiente al ID de la receta
         for (let i = 0; i < filas.length; i++) {
             const idEnFila = filas[i][0];
             if (idEnFila === id) {
                 numeroFilaEncontrada = i + 2;
-                estadoActual = filas[i][1] || "";
-                fechaLimiteStr = filas[i][2] || "";
+                rangoAplicacion = filas[i][1] || "";
+                estadoActual = filas[i][2] || "";
                 break;
             }
         }
@@ -70,15 +69,25 @@ const confirmarReceta = async (req, res) => {
             return res.json({ ok: false, vencida: true, mensaje: "Esta receta ya ha vencido y no puede ser confirmada. Tenias hasta " + fechaLimiteStr + "para confirmarla." });
         }
 
+        //el rangoAplicacion tiene el formato "dd/mm - dd/mm/yyyy", extraer la fecha limite
+        const partesRango = rangoAplicacion.split(" - ");
+        const fechaLimiteStr = partesRango[1]; // La fecha límite es el segundo elemento
+
         // Verificar si la receta ha vencido
         if (fechaLimiteStr) {
             const fechaActual = new Date();
-            const fechaLimite = new Date(fechaLimiteStr);
-            console.log("Fecha actual:", fechaActual);
-            console.log("Fecha límite:", fechaLimite);
+            const partesFechaLimite = fechaLimiteStr.split("/");
+            const fechaLimite = new Date(
+                parseInt(partesFechaLimite[2], 10), // Año
+                parseInt(partesFechaLimite[1], 10) - 1, // Mes (0-indexed)
+                parseInt(partesFechaLimite[0], 10) // Día
+            );
 
-            // Verificar si la fecha límite es válida
-            if (fechaActual > fechaLimite) {
+            //sumamos a la fecha limite 2 dias mas para que el usuario tenga un margen de tiempo para confirmar la receta
+            const fechaLimiteConMargen = new Date(fechaLimite.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+            // Verificar si la fecha actual es mayor que la fecha límite con margen
+            if (fechaActual > fechaLimiteConMargen) {
                 await googleSheets.spreadsheets.values.update({
                     spreadsheetId,
                     range: `Registro!X${numeroFilaEncontrada}`,
@@ -94,16 +103,42 @@ const confirmarReceta = async (req, res) => {
             }
         }
 
-        // Actualizar el estado de la receta a "Confirmada" en la hoja de Google Sheets
-        const celdaActualizar = `Registro!X${numeroFilaEncontrada}`;
+        //verificacion de que la fecha de aplicacion sea menor q la fecha limite
+        if (req.query.fechaAplicacion) {
+            const fechaAplicacion = new Date(req.query.fechaAplicacion);
+            const partesFechaLimite = fechaLimiteStr.split("/");
+            const fechaLimite = new Date(
+                parseInt(partesFechaLimite[2], 10),
+                parseInt(partesFechaLimite[1], 10) - 1,
+                parseInt(partesFechaLimite[0], 10)
+            );
 
+            if (fechaAplicacion > fechaLimite) {
+                return res.json({
+                    ok: false,
+                    mensaje: `La fecha de aplicación (${req.query.fechaAplicacion}) no puede ser posterior a la fecha límite (${fechaLimiteStr}).`
+                });
+            }
+        }
+
+        // Actualizar el estado de la receta a "Confirmada", "fecha de aplicación" y "fecha de confirmacion(solo el dia, mes y año)" en la hoja de Google Sheets
+
+        const diaActualSinHora = new Date();
+        diaActualSinHora.setHours(0, 0, 0, 0);
+
+        let fechaAplicacionFormateada = "";
+        if (req.query.fechaAplicacion) {
+            const [año, mes, dia] = req.query.fechaAplicacion.split("-");
+            fechaAplicacionFormateada = `${dia}/${mes}/${año}`;
+        }
+
+        // Actualizar las columnas X, Y y Z de la fila correspondiente
+        
         await googleSheets.spreadsheets.values.update({
             spreadsheetId,
-            range: celdaActualizar,
+            range: `Registro!X${numeroFilaEncontrada}:Z${numeroFilaEncontrada}`,
             valueInputOption: "USER_ENTERED",
-            resource: {
-                values: [["Confirmada"]]
-            }
+            resource: { values: [["Confirmada", fechaAplicacionFormateada || "", diaActualSinHora.toLocaleDateString()]] }
         });
 
         return res.json({ ok: true, mensaje: "¡Aplicación confirmada con éxito!" });
