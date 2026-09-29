@@ -3,9 +3,11 @@ const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const { guardarEnGoogleSheets } = require('./../googleSheets');
 const { sendMail } = require('./../enviarEmail'); // Tu servicio de correo
+const pool = require('../config/db');
 
 const generarRecetaPdf = async (req, res) => {
   try {
+
     const { captchaToken, ...datosFormulario } = req.body;
 
     // Validar el token de captcha con Cloudflare Turnstile
@@ -36,6 +38,29 @@ const generarRecetaPdf = async (req, res) => {
         ok: false,
         mensaje: "Captcha inválido"
       });
+    }
+
+    //verificar que el usuario este activo
+    if (req.body.cuit1) {
+
+      const cuitValidar = req.body.cuit1;
+      const consultaUsuario = `SELECT estado FROM usuarios WHERE cuitUsuario = ?`;
+
+      // 1. mysql2 devuelve un array: [filas, campos]
+      const [rows] = await pool.execute(consultaUsuario, [cuitValidar]);
+
+      // 2. Verificamos si el usuario existe antes de leer su estado
+      if (rows.length === 0) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+
+      // 3. Tomamos la primera fila
+      const usuario = rows[0];
+
+      // 4. Validamos el estado correctamente
+      if (usuario.estado === "inactivo") {
+        return res.status(403).json({ message: "Usuario Inactivo, por favor comunicarse con administración" }); // *Sugerencia: 403 Forbidden o 401 suele ser mejor que 500 para este caso*
+      }
     }
 
     // Guardar los datos en Google Sheets y obtener el número de receta
@@ -107,6 +132,8 @@ const generarRecetaPdf = async (req, res) => {
     page.drawText(String(cultivo || ""), { x: 100, y: 410, size: 12 });
     page.drawText(String(diagnostico || ""), { x: 403, y: 409, size: 12 });
     page.drawText(String(recomendacion || ""), { x: 158, y: 178, size: 12 });
+    page.drawText(String(asesor || ""), { x: 420, y: 150, size: 12 });
+    page.drawText(String(cuit1 || ""), { x: 420, y: 135, size: 12 });
 
     let startY = 328;
     const lineHeight = 15;
