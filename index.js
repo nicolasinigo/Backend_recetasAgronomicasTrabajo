@@ -14,6 +14,8 @@ const confirmacionRoutes = require('./routers/confirmacionRouter');
 const recetaComercializadoraRoutes = require('./routers/recetaComercializadoraRouter');
 const crearUsuarioRoutes = require('./routers/crearUsuarioRouter');
 const loginRoutes = require('./routers/loginRouter');
+const getUsuarios = require('./routers/getUsuariosRouter')
+const updateUsuariosRouter = require('./routers/updateUsuariosRouter')
 
 const app = express();
 
@@ -25,13 +27,15 @@ app.use(express.static(path.join(__dirname, 'public/dist'))); // Servimos archiv
 
 // Rutas
 
+app.use('/', loginRoutes);
 app.use('/', crearUsuarioRoutes);
+app.use('/', updateUsuariosRouter)
+app.use('/', getUsuarios)
 app.use('/', recetaRoutes);
 app.use('/', confirmacionRoutes);
 app.use('/', recetaComercializadoraRoutes);
-app.use('/', loginRoutes);
 app.get(/^(?!\/generar-pdf).+/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
 });
 
 //Funcioen para detectar si hay algun error en la conexion de la db
