@@ -16,6 +16,7 @@ const crearUsuarioRoutes = require('./routers/crearUsuarioRouter');
 const loginRoutes = require('./routers/loginRouter');
 const getUsuarios = require('./routers/getUsuariosRouter')
 const updateUsuariosRouter = require('./routers/updateUsuariosRouter')
+const cambiarPassword = require('./routers/cambiarPasswordRouter')
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(express.static(path.join(__dirname, 'public/dist'))); // Servimos archiv
 app.use('/', loginRoutes);
 app.use('/', crearUsuarioRoutes);
 app.use('/', updateUsuariosRouter)
+app.use('/', cambiarPassword)
 app.use('/', getUsuarios)
 app.use('/', recetaRoutes);
 app.use('/', confirmacionRoutes);
