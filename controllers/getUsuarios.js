@@ -4,7 +4,7 @@ const getUsuarios = async (req, res) => {
     try {
         const { rolUsuarioLogueado, page = 1, limit = 10, search = '' } = req.query;
 
-        if (rolUsuarioLogueado !== "admin") {
+        if (rolUsuarioLogueado !== "Admin") {
             return res.status(403).json({ message: "Necesita permisos de administrador" });
         }
 
@@ -18,7 +18,7 @@ const getUsuarios = async (req, res) => {
         // 1. Consulta para traer los usuarios filtrados y paginados
         const consultaUsuarios = `
             SELECT * FROM usuarios 
-            WHERE rol = 'asesor' 
+            WHERE rol = 'Asesor' 
             AND (nombre LIKE ? OR apellido LIKE ?) 
             LIMIT ? OFFSET ?
         `;
@@ -34,7 +34,7 @@ const getUsuarios = async (req, res) => {
         // 2. Consulta para saber el total de registros que coinciden (para la paginación correcta)
         const consultaTotal = `
             SELECT COUNT(*) as total FROM usuarios 
-            WHERE rol = 'asesor' 
+            WHERE rol = 'Asesor' 
             AND (nombre LIKE ? OR apellido LIKE ?)
         `;
         const [totalRows] = await pool.execute(consultaTotal, [searchTerm, searchTerm]);

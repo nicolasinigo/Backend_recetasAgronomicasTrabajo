@@ -56,7 +56,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
       const usuario = rows[0];
 
       // 4. Validamos el estado correctamente
-      if (usuario.estado === "inactivo") {
+      if (usuario.estado === "Inactivo") {
         return res.status(403).json({ message: "Usuario Inactivo, por favor comunicarse con administración" }); // *Sugerencia: 403 Forbidden o 401 suele ser mejor que 500 para este caso*
       }
     }

@@ -8,7 +8,7 @@ const updateUsuarios = async (req, res) => {
         const { estado, rolUsuarioLogueado } = req.body;
 
         // Verificar permisos de administrador antes de hacer nada
-        if (rolUsuarioLogueado !== "admin") {
+        if (rolUsuarioLogueado !== "Admin") {
             return res.status(403).json({ message: "Necesita permisos de administrador" });
         }
 
