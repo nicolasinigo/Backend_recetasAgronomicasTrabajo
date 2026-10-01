@@ -63,8 +63,8 @@ async function guardarEnGoogleSheets(datos) {
                 // Email asesor
                 datos.emailAsesor,
 
-                // Cuit asesor
-                datos.cuit1,
+                // N° de Registro del asesor
+                datos.NRegistro,
 
                 // Comercio
                 datos.empresaProductora,
@@ -91,7 +91,7 @@ async function guardarEnGoogleSheets(datos) {
                 datos.tipoMaquina,
 
                 // Matrícula de la máquina
-                datos.Matricula,
+                datos.matricula,
 
                 //domicilio
                 datos.domicilio,
@@ -182,6 +182,15 @@ async function guardarEnGoogleSheetsComercializadora(datos) {
 
                 // Fecha creación receta
                 new Date().toLocaleString(),
+
+                // Apellido + Nombres del asesor
+                `${datos.apellidoUsuario} ${datos.nombreUsuario}`,
+
+                // Email asesor
+                datos.emailAsesor,
+
+                // N° de Registro del asesor
+                datos.NRegistro,
 
                 // comercio fitosanitario
                 datos.comercioFitosanitario,

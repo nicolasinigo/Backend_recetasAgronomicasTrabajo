@@ -70,6 +70,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
       cuitUsuario,
       nombreUsuario,
       apellidoUsuario,
+      NRegistro,
       comercioFitosanitario,
       adquiriente,
       cuit1,

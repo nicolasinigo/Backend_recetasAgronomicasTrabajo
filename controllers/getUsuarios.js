@@ -19,7 +19,7 @@ const getUsuarios = async (req, res) => {
         const consultaUsuarios = `
             SELECT * FROM usuarios 
             WHERE rol = 'Asesor' 
-            AND (nombre LIKE ? OR apellido LIKE ?) 
+            AND (nombre LIKE ? OR apellido LIKE ? OR NRegistro LIKE ?) 
             LIMIT ? OFFSET ?
         `;
         
@@ -27,6 +27,7 @@ const getUsuarios = async (req, res) => {
         const [usuarios] = await pool.execute(consultaUsuarios, [
             searchTerm, 
             searchTerm, 
+            searchTerm,
             String(limitePorPagina), 
             String(offset)
         ]);

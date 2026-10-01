@@ -72,6 +72,7 @@ const generarRecetaPdf = async (req, res) => {
       asesorApellido,
       asesorNombres,
       cuit1,
+      NRegistro,
       empresaProductora,
       cuit2,
       aplicadora,
@@ -82,7 +83,7 @@ const generarRecetaPdf = async (req, res) => {
       cuit4,
       tipoMaquina,
       modelo,
-      Matricula,
+      matricula,
       domicilio,
       predio,
       latitud,
@@ -115,7 +116,7 @@ const generarRecetaPdf = async (req, res) => {
 
     page.drawText(String(numeroRecetaStr || ""), { x: 500, y: 659, size: 12 });
     page.drawText(String(asesor || ""), { x: 100, y: 634, size: 12 });
-    page.drawText(String(cuit1 || ""), { x: 403, y: 634, size: 12 });
+    page.drawText(String(NRegistro || ""), { x: 403, y: 634, size: 12 });
     page.drawText(String(empresaProductora || ""), { x: 130, y: 609, size: 12 });
     page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
     page.drawText(String(aplicadora || ""), { x: 85, y: 584, size: 12 });
@@ -124,7 +125,7 @@ const generarRecetaPdf = async (req, res) => {
     page.drawText(String(piloto || ""), { x: 110, y: 535, size: 12 });
     page.drawText(String(cuit4 || ""), { x: 403, y: 535, size: 12 });
     page.drawText(String(tipoMaquinaModelo || ""), { x: 120, y: 509, size: 12 });
-    page.drawText(String(Matricula || ""), { x: 403, y: 509, size: 12 });
+    page.drawText(String(matricula || ""), { x: 403, y: 509, size: 12 });
     page.drawText(String(domicilio || ""), { x: 74, y: 484, size: 12 });
     page.drawText(String(predio || ""), { x: 175, y: 460, size: 12 });
     page.drawText(String(gps || ""), { x: 403, y: 459, size: 12 });
@@ -132,8 +133,8 @@ const generarRecetaPdf = async (req, res) => {
     page.drawText(String(cultivo || ""), { x: 100, y: 410, size: 12 });
     page.drawText(String(diagnostico || ""), { x: 403, y: 409, size: 12 });
     page.drawText(String(recomendacion || ""), { x: 158, y: 178, size: 12 });
-    page.drawText(String(asesor || ""), { x: 420, y: 150, size: 12 });
-    page.drawText(String(cuit1 || ""), { x: 420, y: 135, size: 12 });
+    page.drawText(String(asesor || ""), { x: 420, y: 120, size: 12 });
+    page.drawText(String(cuit1 || ""), { x: 420, y: 105, size: 12 });
 
     let startY = 328;
     const lineHeight = 15;
@@ -183,6 +184,7 @@ const generarRecetaPdf = async (req, res) => {
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Rango de Fechas para realizar la aplicación:</td><td style="padding: 8px;">${fechaAplicacion}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Asesor Técnico:</td><td style="padding: 8px;">${asesor}</td></tr>
+            <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">N° de Registro del Asesor:</td><td style="padding: 8px;">${NRegistro}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Productora:</td><td style="padding: 8px;">${empresaProductora}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Empresa Aplicadora:</td><td style="padding: 8px;">${aplicadora}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Piloto:</td><td style="padding: 8px;">${piloto}</td></tr>
