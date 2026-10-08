@@ -19,6 +19,14 @@ const confirmarReceta = async (req, res) => {
             return res.status(400).send("Falta el identificador de la receta.");
         }
 
+        if (!req.query.fechaAplicacion) {
+            return res.status(400).json({
+                ok: false,
+                permiteReintentar: true, // <--- Agregado
+                mensaje: "Falta la fecha de aplicación en la solicitud."
+            });
+        }
+
         // Autenticación con Google Sheets
         const client = await auth.getClient();
         const googleSheets = google.sheets({
@@ -37,7 +45,7 @@ const confirmarReceta = async (req, res) => {
         // Verificar si se encontraron filas en la hoja
         const filas = respuesta.data.values;
         if (!filas || filas.length === 0) {
-            return res.status(404).send("No se encontraron registros en la hoja.");
+            return res.status(404).json({ ok: false, mensaje: "No se encontraron recetas en la hoja de Google Sheets." });
         }
 
         let numeroFilaEncontrada = -1;
@@ -61,12 +69,22 @@ const confirmarReceta = async (req, res) => {
 
         // Verificar si la receta ya ha sido confirmada
         if (estadoActual === "Confirmada") {
-            return res.json({ ok: true, yaConfirmada: true, mensaje: "Esta receta ya había sido confirmada anteriormente." });
+            return res.status(400).json({
+                ok: false,
+                yaConfirmada: true,
+                permiteReintentar: false, // <--- Agregado
+                mensaje: "Esta receta ya había sido confirmada anteriormente."
+            });
         }
 
         // Verificar si la receta ha vencido
         if (estadoActual === "Vencida") {
-            return res.json({ ok: false, vencida: true, mensaje: "Esta receta ya ha vencido y no puede ser confirmada. Tenias hasta " + fechaLimiteStr + "para confirmarla." });
+            return res.status(400).json({
+                ok: false,
+                vencida: true,
+                permiteReintentar: false, // <--- Agregado
+                mensaje: "Esta receta ya ha vencido y no puede ser confirmada."
+            });
         }
 
         //el rangoAplicacion tiene el formato "dd/mm - dd/mm/yyyy", extraer la fecha limite
@@ -95,9 +113,10 @@ const confirmarReceta = async (req, res) => {
                     resource: { values: [["Vencida"]] }
                 });
 
-                return res.json({
+                return res.status(400).json({
                     ok: false,
                     vencida: true,
+                    permiteReintentar: false, // <--- Agregado
                     mensaje: `El plazo de confirmación ha expirado. Tenías tiempo hasta el ${fechaLimiteStr}.`
                 });
             }
@@ -114,7 +133,7 @@ const confirmarReceta = async (req, res) => {
             );
 
             if (fechaAplicacion > fechaLimite) {
-                return res.json({
+                return res.status(400).json({
                     ok: false,
                     mensaje: `La fecha de aplicación (${req.query.fechaAplicacion}) no puede ser posterior a la fecha límite (${fechaLimiteStr}).`
                 });
@@ -133,7 +152,7 @@ const confirmarReceta = async (req, res) => {
         }
 
         // Actualizar las columnas X, Y y Z de la fila correspondiente
-        
+
         await googleSheets.spreadsheets.values.update({
             spreadsheetId,
             range: `Registro!X${numeroFilaEncontrada}:Z${numeroFilaEncontrada}`,
@@ -141,7 +160,7 @@ const confirmarReceta = async (req, res) => {
             resource: { values: [["Confirmada", fechaAplicacionFormateada || "", diaActualSinHora.toLocaleDateString()]] }
         });
 
-        return res.json({ ok: true, mensaje: "¡Aplicación confirmada con éxito!" });
+        return res.status(200).json({ ok: true, mensaje: "¡Aplicación confirmada con éxito!" });
 
     } catch (error) {
         console.error("Error al confirmar la receta:", error);

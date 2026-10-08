@@ -83,6 +83,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
       recomendacion,
       agroquimicos,
       email,
+      mailEmpresa
     } = req.body;
 
     // Cargar la plantilla PDF
@@ -156,6 +157,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
     // Enviar el correo electrónico a la dirección proporcionada en el formulario
     const listaDestinatarios = [];
     if (email && email.trim() !== '') listaDestinatarios.push(email.trim());
+    if (mailEmpresa && mailEmpresa.trim() !== '') listaDestinatarios.push(mailEmpresa.trim());
 
     await sendMail({
       to: listaDestinatarios,
@@ -166,7 +168,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
 
     res.json({
       ok: true,
-      mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito. Se envió a ${email}.`
+      mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito. Se envió a ${email} y ${mailEmpresa}.`
     });
 
   } catch (error) {

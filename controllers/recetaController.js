@@ -94,6 +94,7 @@ const generarRecetaPdf = async (req, res) => {
       recomendacion,
       agroquimicos,
       emailAsesor,
+      mailEmpresa,
       mapaImagen
     } = req.body;
 
@@ -172,7 +173,7 @@ const generarRecetaPdf = async (req, res) => {
 
     // Enviar el correo electrónico con la receta y el enlace de confirmación
     //const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
-    const linkConfirmacion = `http://localhost:3000/Receta/${numeroRecetaStr}`
+    const linkConfirmacion = `${process.env.FRONTEND_URL}/receta/${numeroRecetaStr}`
 
     const cuerpoHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
@@ -208,6 +209,7 @@ const generarRecetaPdf = async (req, res) => {
     // Enviar el correo electrónico a la dirección proporcionada en el formulario
     const listaDestinatarios = [];
     if (emailAsesor && emailAsesor.trim() !== '') listaDestinatarios.push(emailAsesor.trim());
+    if (mailEmpresa && mailEmpresa.trim() !== '') listaDestinatarios.push(mailEmpresa.trim());
 
     await sendMail({
       to: listaDestinatarios,
@@ -218,7 +220,7 @@ const generarRecetaPdf = async (req, res) => {
 
     res.json({
       ok: true,
-      mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito. Se envió a ${emailAsesor}.`
+      mensaje: `Receta N° ${numeroRecetaStr} procesada y enviada por correo con éxito. Se envió a ${emailAsesor} y ${mailEmpresa}.`
     });
 
   } catch (error) {

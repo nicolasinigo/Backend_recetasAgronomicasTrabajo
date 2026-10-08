@@ -187,7 +187,7 @@ async function guardarEnGoogleSheetsComercializadora(datos) {
                 `${datos.apellidoUsuario} ${datos.nombreUsuario}`,
 
                 // Email asesor
-                datos.emailAsesor,
+                datos.email,
 
                 // N° de Registro del asesor
                 datos.NRegistro,
@@ -218,6 +218,9 @@ async function guardarEnGoogleSheetsComercializadora(datos) {
 
                 //diagnóstico
                 datos.diagnostico,
+
+                //Mail empresa
+                datos.mailEmpresa,
 
                 // Número receta
                 numeroReceta,
