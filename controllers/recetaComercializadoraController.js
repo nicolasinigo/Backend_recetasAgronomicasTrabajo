@@ -1,4 +1,3 @@
-const axios = require('axios');
 const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const { guardarEnGoogleSheetsComercializadora } = require('./../googleSheets');
@@ -7,37 +6,6 @@ const pool = require('../config/db');
 
 const generarRecetaComercializadoraPdf = async (req, res) => {
   try {
-    const { captchaToken, ...datosFormulario } = req.body;
-
-    // Validar el token de captcha con Cloudflare Turnstile
-    if (!captchaToken) {
-      return res.status(400).json({
-        ok: false,
-        mensaje: "Captcha requerido"
-      });
-    }
-
-    // Validar el token de captcha con Cloudflare Turnstile
-    const response = await axios.post(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      new URLSearchParams({
-        secret: process.env.TURNSTILE_SECRET,
-        response: captchaToken
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      }
-    );
-
-    // Verificar la respuesta del captcha
-    if (!response.data.success) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: "Captcha inválido"
-      });
-    }
 
     if (req.body.cuitUsuario) {
 

@@ -1,4 +1,3 @@
-const axios = require('axios');
 const { PDFDocument, rgb } = require('pdf-lib');
 const fs = require('fs');
 const { guardarEnGoogleSheets } = require('./../googleSheets');
@@ -7,38 +6,6 @@ const pool = require('../config/db');
 
 const generarRecetaPdf = async (req, res) => {
   try {
-
-    const { captchaToken, ...datosFormulario } = req.body;
-
-    // Validar el token de captcha con Cloudflare Turnstile
-    if (!captchaToken) {
-      return res.status(400).json({
-        ok: false,
-        mensaje: "Captcha requerido"
-      });
-    }
-
-    // Validar el token de captcha con Cloudflare Turnstile
-    const response = await axios.post(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      new URLSearchParams({
-        secret: process.env.TURNSTILE_SECRET,
-        response: captchaToken
-      }),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      }
-    );
-
-    // Verificar la respuesta del captcha
-    if (!response.data.success) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: "Captcha inválido"
-      });
-    }
 
     //verificar que el usuario este activo
     if (req.body.cuit1) {
@@ -172,8 +139,8 @@ const generarRecetaPdf = async (req, res) => {
     }
 
     // Enviar el correo electrónico con la receta y el enlace de confirmación
-    //const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/Receta/${numeroRecetaStr}`;
-    const linkConfirmacion = `${process.env.FRONTEND_URL}/receta/${numeroRecetaStr}`
+    const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/receta/${numeroRecetaStr}`;
+    //const linkConfirmacion = `${process.env.FRONTEND_URL}/receta/${numeroRecetaStr}`
 
     const cuerpoHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
