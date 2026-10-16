@@ -5,6 +5,10 @@ const login = async (req, res) => {
     try {
         const { usuario, password } = req.body;
 
+        if (!usuario || !password) {
+            return res.status(400).json({ message: 'Usuario y contraseña son requeridos' });
+        }
+
         const consulta = `SELECT id,cuitUsuario,nombre,apellido,email,NRegistro,rol,estado FROM usuarios WHERE cuitUsuario = ? AND password = ?`;
 
         const [resultado] = await pool.execute(consulta, [usuario, password]);
