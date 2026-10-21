@@ -17,6 +17,8 @@ const loginRoutes = require('./routers/loginRouter');
 const getUsuarios = require('./routers/getUsuariosRouter')
 const updateUsuariosRouter = require('./routers/updateUsuariosRouter')
 const cambiarPassword = require('./routers/cambiarPasswordRouter')
+const codigoPasswordOTPRouter = require('./routers/codigoPasswordOTPRouter');
+const verificarCodigoOTPRouter = require('./routers/verificarCodigoOTPRouter');
 
 const app = express();
 
@@ -36,6 +38,8 @@ app.use('/', getUsuarios)
 app.use('/', recetaRoutes);
 app.use('/', confirmacionRoutes);
 app.use('/', recetaComercializadoraRoutes);
+app.use('/', codigoPasswordOTPRouter);
+app.use('/', verificarCodigoOTPRouter);
 app.get(/^(?!\/generar-pdf).+/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
 });
