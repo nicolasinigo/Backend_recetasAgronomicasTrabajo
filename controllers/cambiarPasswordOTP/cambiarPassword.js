@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+const pool = require('../../config/db');
 
 const cambiarPassword = async (req, res) => {
     console.log("entre")

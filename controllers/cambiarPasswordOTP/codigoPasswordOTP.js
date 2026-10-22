@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-const { sendMail } = require('../enviarEmail');
-const pool = require('../config/db');
+const { sendMail } = require('../../enviarEmail');
+const pool = require('../../config/db');
 
 const generarCodigoOTP = async (req, res) => {
     try {

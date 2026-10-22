@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generarCodigoOTP } = require('../controllers/codigoPasswordOTP');
+const { generarCodigoOTP } = require('../../controllers/cambiarPasswordOTP/codigoPasswordOTP');
 
 router.put('/generarCodigoOTP/:id', generarCodigoOTP);
 

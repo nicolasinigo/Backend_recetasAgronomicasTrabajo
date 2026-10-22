@@ -16,9 +16,12 @@ const crearUsuarioRoutes = require('./routers/crearUsuarioRouter');
 const loginRoutes = require('./routers/loginRouter');
 const getUsuarios = require('./routers/getUsuariosRouter')
 const updateUsuariosRouter = require('./routers/updateUsuariosRouter')
-const cambiarPassword = require('./routers/cambiarPasswordRouter')
-const codigoPasswordOTPRouter = require('./routers/codigoPasswordOTPRouter');
-const verificarCodigoOTPRouter = require('./routers/verificarCodigoOTPRouter');
+const cambiarPassword = require('./routers/cambiarPassword/cambiarPasswordRouter')
+const codigoPasswordOTPRouter = require('./routers/cambiarPassword/codigoPasswordOTPRouter');
+const verificarCodigoOTPRouter = require('./routers/cambiarPassword/verificarCodigoOTPRouter');
+const crearCodigoOTPRouter = require('./routers/recuperarPassword/crearCodigoOTPRouter');
+const recuperarVerificarCodigoOTPRouter = require('./routers/recuperarPassword/verificarCodigoOTPRouter');
+const recuperarPasswordRouter = require('./routers/recuperarPassword/recuperarPasswordRouter');
 
 const app = express();
 
@@ -40,6 +43,9 @@ app.use('/', confirmacionRoutes);
 app.use('/', recetaComercializadoraRoutes);
 app.use('/', codigoPasswordOTPRouter);
 app.use('/', verificarCodigoOTPRouter);
+app.use('/', crearCodigoOTPRouter);
+app.use('/', recuperarVerificarCodigoOTPRouter);
+app.use('/', recuperarPasswordRouter);
 app.get(/^(?!\/generar-pdf).+/, (req, res) => {
   res.sendFile(path.join(__dirname, 'public/dist', 'index.html'));
 });

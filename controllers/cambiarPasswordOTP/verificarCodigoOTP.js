@@ -1,9 +1,18 @@
-const pool = require('../config/db');
+const pool = require('../../config/db');
 
 const verificarCodigoOTP = async (req, res) => {
     try {
         const userId = req.params.id;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'ID de usuario no proporcionado' });
+        }
+
         const { codigoOTP } = req.body;
+
+        if (!codigoOTP) {
+            return res.status(400).json({ message: 'Código OTP no proporcionado' });
+        }
 
         // Consulta para obtener el código OTP y su expiración del usuario
         const consulta = `
