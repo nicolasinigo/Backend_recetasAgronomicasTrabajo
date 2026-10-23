@@ -1,9 +1,7 @@
 const pool = require('../../config/db');
 
 const cambiarPassword = async (req, res) => {
-    console.log("entre")
     try {
-        console.log(req.body)
         const {
             idUsuarioLogueado,
             passwordActual,
