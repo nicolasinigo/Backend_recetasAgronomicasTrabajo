@@ -6,6 +6,7 @@ const pool = require('../config/db');
 
 const generarRecetaComercializadoraPdf = async (req, res) => {
   try {
+    console.log('Datos recibidos en el backend:', req.body);
 
     if (req.body.cuitUsuario) {
 
@@ -28,6 +29,96 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
         return res.status(403).json({ message: "Usuario Inactivo, por favor comunicarse con administración" }); // *Sugerencia: 403 Forbidden o 401 suele ser mejor que 500 para este caso*
       }
     }
+    
+    // Validar que los campos obligatorios estén presentes
+    const camposObligatorios = [
+      'cuitUsuario', 'nombreUsuario', 'apellidoUsuario', 'NRegistro',
+      'comercioFitosanitario', 'adquiriente', 'cuit1', 'cuit2', 'domicilio',
+      'predio', 'superficie', 'cultivo', 'diagnostico', 'recomendacion',
+      'agroquimicos', 'email', 'mailEmpresa'
+    ];
+
+    for (const campo of camposObligatorios) {
+      if (!req.body[campo]) {
+        return res.status(400).json({ message: `El campo ${campo} es obligatorio.` });
+      }
+    }
+
+    // Validar que 'agroquimicos' sea un array
+    if (!Array.isArray(req.body.agroquimicos)) {
+      return res.status(400).json({ message: "El campo 'agroquimicos' debe ser un array." });
+    }
+
+    //optenemos conexion del pool para realizar las transacciones
+    const connection = await pool.getConnection();
+
+    try {
+      // Iniciamos la transacción
+      await connection.beginTransaction();
+
+      //consulta para traer el id del usuario a partir del cuitUsuario
+      const consultaUsuarioId = `SELECT id FROM usuarios WHERE cuitUsuario = ?`;
+      const [resultadoUsuario] = await connection.execute(consultaUsuarioId, [req.body.cuitUsuario]);
+
+      if (resultadoUsuario.length === 0) {
+        throw new Error("Usuario no encontrado");
+      }
+
+      const usuarioId = resultadoUsuario[0].id;
+
+      const { comercioFitosanitario,cuit1, adquiriente, cuit2, domicilio, predio, superficie, cultivo, cultivoOtro, diagnostico, recomendacion, mailEmpresa,agroquimicos } = req.body;
+
+      //si cultivo viene vacio, utilizo cultivoOtro
+      const cultivoElegido = cultivo || cultivoOtro;
+
+      const consultaInsertReceta = `
+        INSERT INTO recetas_comercializadoras (
+        usuario_id, 
+        comercio_fitosanitario,
+        cuit_comercio,
+        adquiriente,
+        cuit_adquiriente,
+        domicilio,
+        predio,
+        superficie,
+        cultivo,
+        diagnostico,
+        recomendacion,
+        mail_empresa
+        )
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+      `;
+
+      const [resultadoReceta] = await connection.execute(consultaInsertReceta, [
+        usuarioId, comercioFitosanitario, cuit1, adquiriente, cuit2, domicilio, predio, superficie, cultivoElegido, diagnostico, recomendacion, mailEmpresa
+      ]);
+
+      const recetaId = resultadoReceta.insertId;
+      console.log(`Receta insertada con ID: ${recetaId}`);
+
+      // Insertar los agroquímicos asociados a la receta
+      const consultaInsertAgroquimico = `
+        INSERT INTO agroquimicos (receta_id, principio_activo, nombre_comercial, dosis, cantidad_total)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      console.log(`Insertando agroquímicos para la receta ID: ${recetaId}`);
+      for (const agro of agroquimicos) {
+        await connection.execute(consultaInsertAgroquimico, [
+          recetaId, agro.principioActivo, agro.nomencComercial, agro.dosis, agro.cantidadTotal
+        ]);
+      }
+
+      // Confirmamos la transacción
+      await connection.commit();
+    } catch (error) {
+      // Si ocurre un error, revertimos la transacción
+      await connection.rollback();
+      throw error; // Re-lanzamos el error para que sea manejado en el bloque externo
+    } finally {
+      // Liberamos la conexión
+      connection.release();
+    }
 
     // Guardar los datos en Google Sheets y obtener el número de receta
     const numeroReceta = await guardarEnGoogleSheetsComercializadora(req.body);
@@ -47,12 +138,16 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
       predio,
       superficie,
       cultivo,
+      cultivoOtro,
       diagnostico,
       recomendacion,
       agroquimicos,
       email,
       mailEmpresa
     } = req.body;
+
+    //si cultivo viene vacio, utilizo cultivoOtro
+    const cultivoElegido = cultivo || cultivoOtro;
 
     // Cargar la plantilla PDF
     const plantillaBytes = fs.readFileSync('receta_agronomica_comercializadora.pdf');
@@ -74,7 +169,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
     page.drawText(String(domicilio || ""), { x: 74, y: 584, size: 12 });
     page.drawText(String(predio || ""), { x: 177, y: 559, size: 12 });
     page.drawText(String(superficie || "") + " km²", { x: 77, y: 534, size: 12 });
-    page.drawText(String(cultivo || ""), { x: 101, y: 509, size: 12 });
+    page.drawText(String(cultivoElegido || ""), { x: 101, y: 509, size: 12 });
     page.drawText(String(diagnostico || ""), { x: 84, y: 484, size: 12 });
     page.drawText(String(recomendacion || ""), { x: 159, y: 252, size: 12 });
     page.drawText(String(asesor || ""), { x: 420, y: 145, size: 12 });
@@ -113,7 +208,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Comercio Fitosanitario:</td><td style="padding: 8px;">${comercioFitosanitario}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Adquiriente:</td><td style="padding: 8px;">${adquiriente}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Predio:</td><td style="padding: 8px;">${predio}</td></tr>
-            <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivo}</td></tr>
+            <tr><td style="padding: 8px; font-weight: bold;">Cultivo:</td><td style="padding: 8px;">${cultivoElegido}</td></tr>
             <tr style="background: #f9f9f9;"><td style="padding: 8px; font-weight: bold;">Superficie:</td><td style="padding: 8px;">${superficie} km²</td></tr>
         </table>
         <p style="font-size: 12px; color: #777; margin-top: 30px;">
