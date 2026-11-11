@@ -6,7 +6,6 @@ const pool = require('../config/db');
 
 const generarRecetaComercializadoraPdf = async (req, res) => {
   try {
-    console.log('Datos recibidos en el backend:', req.body);
 
     if (req.body.cuitUsuario) {
 
@@ -94,7 +93,6 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
       ]);
 
       const recetaId = resultadoReceta.insertId;
-      console.log(`Receta insertada con ID: ${recetaId}`);
 
       // Insertar los agroquímicos asociados a la receta
       const consultaInsertAgroquimico = `
@@ -102,7 +100,6 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
         VALUES (?, ?, ?, ?, ?)
       `;
 
-      console.log(`Insertando agroquímicos para la receta ID: ${recetaId}`);
       for (const agro of agroquimicos) {
         await connection.execute(consultaInsertAgroquimico, [
           recetaId, agro.principioActivo, agro.nomencComercial, agro.dosis, agro.cantidadTotal
