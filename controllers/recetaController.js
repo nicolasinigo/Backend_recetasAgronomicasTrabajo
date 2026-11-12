@@ -49,7 +49,8 @@ const generarRecetaPdf = async (req, res) => {
       agroquimicos,
       emailAsesor,
       mailEmpresa,
-      mapaImagen
+      mapaImagen,
+      poligono
     } = req.body;
 
     // Calculamos las fechas una sola vez para usarlas en la BD, el PDF y el Mail
@@ -78,8 +79,8 @@ const generarRecetaPdf = async (req, res) => {
         INSERT INTO recetas_aplicacion (
             usuario_id, empresa_productora, cuit_productor, aplicadora, categoria_aplicadora, cuit_aplicadora, 
             piloto_apellido, piloto_nombres, cuit_piloto, tipo_maquina, modelo, matricula, domicilio, predio, latitud, 
-            longitud, superficie, cultivo, diagnostico, recomendacion, mail_empresa, mapa_imagen, 
-            fecha_vencimiento, estado_receta
+            longitud, superficie, cultivo, diagnostico, recomendacion, mail_empresa, 
+            poligono, fecha_vencimiento, estado_receta
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendiente')
       `;
 
@@ -105,7 +106,7 @@ const generarRecetaPdf = async (req, res) => {
         diagnostico,
         recomendacion,
         mailEmpresa,
-        mapaImagen,
+        poligono ? JSON.stringify(poligono) : null,
         fechaVencimiento
       ]);
 
@@ -216,8 +217,8 @@ const generarRecetaPdf = async (req, res) => {
 
     // 7. link de confirmación para el correo
     const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/receta/${idReceta}`;
-    //link de prueba: http://localhost:5173/receta/${idReceta}
-    //const linkConfirmacion = `http://localhost:5173/receta/${idReceta}`;
+    //link de prueba: http://localhost:3000/receta/${idReceta}
+    //const linkConfirmacion = `http://localhost:3000/receta/${idReceta}`;
 
     const cuerpoHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">

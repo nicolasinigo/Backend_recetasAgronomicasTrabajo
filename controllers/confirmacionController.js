@@ -17,8 +17,6 @@ const confirmarReceta = async (req, res) => {
         const { id } = req.params;
         const { fechaAplicacion } = req.query;
 
-        console.log(`Confirmando receta con ID: ${id} y fecha de aplicación: ${fechaAplicacion}`);
-
         // 1. Validaciones iniciales de parámetros
         if (!id) {
             return res.status(400).json({ ok: false, mensaje: "Falta el identificador de la receta." });
