@@ -1,4 +1,5 @@
 const { google } = require('googleapis');
+const pool = require('../config/db'); // Importamos la conexión a MySQL
 
 const auth = new google.auth.GoogleAuth({
     credentials: {
@@ -14,158 +15,171 @@ const auth = new google.auth.GoogleAuth({
 const confirmarReceta = async (req, res) => {
     try {
         const { id } = req.params;
+        const { fechaAplicacion } = req.query;
 
+        console.log(`Confirmando receta con ID: ${id} y fecha de aplicación: ${fechaAplicacion}`);
+
+        // 1. Validaciones iniciales de parámetros
         if (!id) {
-            return res.status(400).send("Falta el identificador de la receta.");
+            return res.status(400).json({ ok: false, mensaje: "Falta el identificador de la receta." });
         }
 
-        if (!req.query.fechaAplicacion) {
+        if (!fechaAplicacion) {
             return res.status(400).json({
                 ok: false,
-                permiteReintentar: true, // <--- Agregado
+                permiteReintentar: true,
                 mensaje: "Falta la fecha de aplicación en la solicitud."
             });
         }
 
-        // Autenticación con Google Sheets
-        const client = await auth.getClient();
-        const googleSheets = google.sheets({
-            version: "v4",
-            auth: client
-        });
+        // 2. Buscar la receta en la base de datos (MySQL como fuente de verdad)
+        const [rows] = await pool.execute(
+            `SELECT id, fecha_creacion, fecha_vencimiento, estado_receta 
+             FROM recetas_aplicacion 
+             WHERE id = ? AND estado_registro = 'Activo'`,
+            [id]
+        );
 
-        const spreadsheetId = "1-B3ekbt83Sal1VvsTeIX-zBVrhoYK9l8DVxD2NFbgBg";
-
-        // Leer los datos de la hoja "Registro" para encontrar la fila correspondiente al ID de la receta
-        const respuesta = await googleSheets.spreadsheets.values.get({
-            spreadsheetId,
-            range: "Registro!V2:Y"
-        });
-
-        // Verificar si se encontraron filas en la hoja
-        const filas = respuesta.data.values;
-        if (!filas || filas.length === 0) {
-            return res.status(404).json({ ok: false, mensaje: "No se encontraron recetas en la hoja de Google Sheets." });
+        if (rows.length === 0) {
+            return res.status(404).json({ ok: false, mensaje: "Receta no encontrada en la base de datos." });
         }
 
-        let numeroFilaEncontrada = -1;
-        let estadoActual = "";
+        const receta = rows[0];
 
-        // Buscar la fila correspondiente al ID de la receta
-        for (let i = 0; i < filas.length; i++) {
-            const idEnFila = filas[i][0];
-            if (idEnFila === id) {
-                numeroFilaEncontrada = i + 2;
-                rangoAplicacion = filas[i][1] || "";
-                estadoActual = filas[i][2] || "";
-                break;
-            }
-        }
-
-        // Verificar si se encontró la fila correspondiente al ID de la receta
-        if (numeroFilaEncontrada === -1) {
-            return res.status(404).json({ ok: false, mensaje: "Receta no encontrada." });
-        }
-
-        // Verificar si la receta ya ha sido confirmada
-        if (estadoActual === "Confirmada") {
+        // 3. Verificar estado actual en la base de datos
+        if (receta.estado_receta === "Confirmada") {
             return res.status(400).json({
                 ok: false,
                 yaConfirmada: true,
-                permiteReintentar: false, // <--- Agregado
+                permiteReintentar: false,
                 mensaje: "Esta receta ya había sido confirmada anteriormente."
             });
         }
 
-        // Verificar si la receta ha vencido
-        if (estadoActual === "Vencida") {
+        if (receta.estado_receta === "Vencida") {
             return res.status(400).json({
                 ok: false,
                 vencida: true,
-                permiteReintentar: false, // <--- Agregado
+                permiteReintentar: false,
                 mensaje: "Esta receta ya ha vencido y no puede ser confirmada."
             });
         }
 
-        //el rangoAplicacion tiene el formato "dd/mm - dd/mm/yyyy", extraer la fecha limite
-        const partesRango = rangoAplicacion.split(" - ");
-        const fechaLimiteStr = partesRango[1]; // La fecha límite es el segundo elemento
+        // 4. Validar plazos: 7 días para aplicar + 48 horas posteriores para informar
+        const ahora = new Date();
+        const fechaCreacion = new Date(receta.fecha_creacion);
+        const fechaVencimiento = new Date(receta.fecha_vencimiento);
 
-        // Verificar si la receta ha vencido
-        if (fechaLimiteStr) {
-            const fechaActual = new Date();
-            const partesFechaLimite = fechaLimiteStr.split("/");
-            const fechaLimite = new Date(
-                parseInt(partesFechaLimite[2], 10), // Año
-                parseInt(partesFechaLimite[1], 10) - 1, // Mes (0-indexed)
-                parseInt(partesFechaLimite[0], 10) // Día
+        // Sumamos 48 horas (2 días) de margen al vencimiento para poder informar
+        const fechaLimiteConfirmacion = new Date(fechaVencimiento.getTime() + 48 * 60 * 60 * 1000);
+
+        if (ahora > fechaLimiteConfirmacion) {
+            // Marcar como Vencida en MySQL
+            await pool.execute(
+                `UPDATE recetas_aplicacion SET estado_receta = 'Vencida' WHERE id = ?`,
+                [id]
             );
 
-            //sumamos a la fecha limite 2 dias mas para que el usuario tenga un margen de tiempo para confirmar la receta
-            const fechaLimiteConMargen = new Date(fechaLimite.getTime() + 2 * 24 * 60 * 60 * 1000);
+            // Intentar reflejar el vencimiento en Google Sheets (sin frenar la respuesta si falla)
+            await actualizarGoogleSheets(id, "Vencida", "", "");
 
-            // Verificar si la fecha actual es mayor que la fecha límite con margen
-            if (fechaActual > fechaLimiteConMargen) {
-                await googleSheets.spreadsheets.values.update({
-                    spreadsheetId,
-                    range: `Registro!X${numeroFilaEncontrada}`,
-                    valueInputOption: "USER_ENTERED",
-                    resource: { values: [["Vencida"]] }
-                });
-
-                return res.status(400).json({
-                    ok: false,
-                    vencida: true,
-                    permiteReintentar: false, // <--- Agregado
-                    mensaje: `El plazo de confirmación ha expirado. Tenías tiempo hasta el ${fechaLimiteStr}.`
-                });
-            }
+            const fechaVencStr = fechaVencimiento.toLocaleDateString('es-AR');
+            return res.status(400).json({
+                ok: false,
+                vencida: true,
+                permiteReintentar: false,
+                mensaje: `El plazo de confirmación ha expirado. Tenías tiempo hasta el ${fechaVencStr} (más 48 hs de tolerancia).`
+            });
         }
 
-        //verificacion de que la fecha de aplicacion sea menor q la fecha limite
-        if (req.query.fechaAplicacion) {
-            const fechaAplicacion = new Date(req.query.fechaAplicacion);
-            const partesFechaLimite = fechaLimiteStr.split("/");
-            const fechaLimite = new Date(
-                parseInt(partesFechaLimite[2], 10),
-                parseInt(partesFechaLimite[1], 10) - 1,
-                parseInt(partesFechaLimite[0], 10)
-            );
+        // 5. Validar que la fecha elegida (YYYY-MM-DD) esté dentro del rango de 7 días
+        const [anio, mes, dia] = fechaAplicacion.split("-").map(Number);
+        const fechaAplicacionDate = new Date(anio, mes - 1, dia, 12, 0, 0); // Mediodía local para evitar desfases UTC
 
-            if (fechaAplicacion > fechaLimite) {
-                return res.status(400).json({
-                    ok: false,
-                    mensaje: `La fecha de aplicación (${req.query.fechaAplicacion}) no puede ser posterior a la fecha límite (${fechaLimiteStr}).`
-                });
-            }
+        const inicioRango = new Date(fechaCreacion);
+        inicioRango.setHours(0, 0, 0, 0);
+
+        const finRango = new Date(fechaVencimiento);
+        finRango.setHours(23, 59, 59, 999);
+
+        if (fechaAplicacionDate < inicioRango || fechaAplicacionDate > finRango) {
+            return res.status(400).json({
+                ok: false,
+                permiteReintentar: true,
+                mensaje: `La fecha de aplicación (${dia}/${mes}/${anio}) debe estar entre el ${inicioRango.toLocaleDateString('es-AR')} y el ${finRango.toLocaleDateString('es-AR')}.`
+            });
         }
 
-        // Actualizar el estado de la receta a "Confirmada", "fecha de aplicación" y "fecha de confirmacion(solo el dia, mes y año)" en la hoja de Google Sheets
+        // 6. Actualizar el registro en MySQL (Pendiente -> Confirmada)
+        await pool.execute(
+            `UPDATE recetas_aplicacion 
+             SET fecha_aplicacion = ?, 
+                 fecha_confirmacion = NOW(), 
+                 estado_receta = 'Confirmada' 
+             WHERE id = ?`,
+            [fechaAplicacion, id]
+        );
 
-        const diaActualSinHora = new Date();
-        diaActualSinHora.setHours(0, 0, 0, 0);
+        // 7. Si MySQL salió bien, actualizar Google Sheets
+        const fechaAplicacionFormateada = `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')}/${anio}`;
+        const fechaConfirmacionFormateada = ahora.toLocaleDateString('es-AR');
 
-        let fechaAplicacionFormateada = "";
-        if (req.query.fechaAplicacion) {
-            const [año, mes, dia] = req.query.fechaAplicacion.split("-");
-            fechaAplicacionFormateada = `${dia}/${mes}/${año}`;
-        }
+        await actualizarGoogleSheets(id, "Confirmada", fechaAplicacionFormateada, fechaConfirmacionFormateada);
 
-        // Actualizar las columnas X, Y y Z de la fila correspondiente
-
-        await googleSheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: `Registro!X${numeroFilaEncontrada}:Z${numeroFilaEncontrada}`,
-            valueInputOption: "USER_ENTERED",
-            resource: { values: [["Confirmada", fechaAplicacionFormateada || "", diaActualSinHora.toLocaleDateString()]] }
+        return res.status(200).json({
+            ok: true,
+            mensaje: "¡Aplicación confirmada y registrada con éxito!"
         });
-
-        return res.status(200).json({ ok: true, mensaje: "¡Aplicación confirmada con éxito!" });
 
     } catch (error) {
         console.error("Error al confirmar la receta:", error);
         return res.status(500).json({ ok: false, mensaje: "Hubo un error al procesar la confirmación." });
     }
 };
+
+// Función auxiliar aislada para actualizar Google Sheets sin comprometer la transacción principal
+async function actualizarGoogleSheets(idReceta, nuevoEstado, fechaAplicacionStr, fechaConfirmacionStr) {
+    try {
+        const client = await auth.getClient();
+        const googleSheets = google.sheets({ version: "v4", auth: client });
+        const spreadsheetId = "1-B3ekbt83Sal1VvsTeIX-zBVrhoYK9l8DVxD2NFbgBg";
+
+        const respuesta = await googleSheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: "Registro!W2:W" // Solo necesitamos leer la columna W donde está el ID
+        });
+
+        const filas = respuesta.data.values;
+        if (!filas || filas.length === 0) return;
+
+        let numeroFilaEncontrada = -1;
+        for (let i = 0; i < filas.length; i++) {
+            if (String(filas[i][0]).trim() === String(idReceta).trim()) {
+                numeroFilaEncontrada = i + 2;
+                break;
+            }
+        }
+
+        if (numeroFilaEncontrada !== -1) {
+            const valoresActualizar = nuevoEstado === "Vencida"
+                ? [["Vencida"]]
+                : [["Confirmada", fechaAplicacionStr, fechaConfirmacionStr]];
+
+            const rangoActualizar = nuevoEstado === "Vencida"
+                ? `Registro!X${numeroFilaEncontrada}`
+                : `Registro!X${numeroFilaEncontrada}:Z${numeroFilaEncontrada}`;
+
+            await googleSheets.spreadsheets.values.update({
+                spreadsheetId,
+                range: rangoActualizar,
+                valueInputOption: "USER_ENTERED",
+                resource: { values: valoresActualizar }
+            });
+        }
+    } catch (sheetError) {
+        // Logueamos el error pero no rompemos la respuesta al usuario porque MySQL ya guardó el dato
+        console.error(`Error al sincronizar receta #${idReceta} en Google Sheets:`, sheetError);
+    }
+}
 
 module.exports = { confirmarReceta };

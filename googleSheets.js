@@ -14,7 +14,7 @@ const auth = new google.auth.GoogleAuth({
     ]
 });
 
-async function guardarEnGoogleSheets(datos) {
+async function guardarEnGoogleSheets(datos , idReceta, fechaCreacion, fechaVencimiento) {
 
     const client = await auth.getClient();
 
@@ -27,20 +27,6 @@ async function guardarEnGoogleSheets(datos) {
     // ID DEL GOOGLE SHEET
     const spreadsheetId = "1-B3ekbt83Sal1VvsTeIX-zBVrhoYK9l8DVxD2NFbgBg";
 
-    const respuesta = await googleSheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: "cantidad de recetas!A2"
-    });
-
-    let numeroReceta = 1;
-    if (respuesta.data.values && respuesta.data.values.length > 0) {
-        numeroReceta = parseInt(respuesta.data.values[0][0]) + 1;
-    }
-
-    //crear un rango de fech desde la fecha de creacion hasta 7 dias despues, con este formato: "dd/mm - dd/mm/yyyy"
-    const fechaCreacion = new Date();
-    const fechaLimite = new Date(fechaCreacion.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const fechaAplicacion = `${fechaCreacion.getDate().toString().padStart(2, '0')}/${(fechaCreacion.getMonth() + 1).toString().padStart(2, '0')} - ${fechaLimite.getDate().toString().padStart(2, '0')}/${(fechaLimite.getMonth() + 1).toString().padStart(2, '0')}/${fechaLimite.getFullYear()}`;
 
     await googleSheets.spreadsheets.values.append({
 
@@ -54,8 +40,11 @@ async function guardarEnGoogleSheets(datos) {
         resource: {
             values: [[
 
-                // Fecha creación receta
-                new Date().toLocaleString(),
+                // Fecha creación receta con formato dd/mm/yyyy
+                fechaCreacion.toLocaleDateString(),
+
+                // fecha vencimiento con formato dd/mm/yyyy
+                fechaVencimiento.toLocaleDateString(),
 
                 // Apellido + Nombres del asesor
                 `${datos.asesorApellido} ${datos.asesorNombres}`,
@@ -118,10 +107,7 @@ async function guardarEnGoogleSheets(datos) {
                 datos.diagnostico,
 
                 // Número receta
-                numeroReceta,
-                
-                // Rango de fechas para realizar la aplicación
-                fechaAplicacion,        
+                idReceta,       
 
                 //Estado
                 "Pendiente",
@@ -129,8 +115,6 @@ async function guardarEnGoogleSheets(datos) {
         }
 
     });
-
-    return numeroReceta;
 }
 
 const auth2 = new google.auth.GoogleAuth({
