@@ -28,7 +28,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
         return res.status(403).json({ message: "Usuario Inactivo, por favor comunicarse con administración" }); // *Sugerencia: 403 Forbidden o 401 suele ser mejor que 500 para este caso*
       }
     }
-    
+
     // Validar que los campos obligatorios estén presentes
     const camposObligatorios = [
       'cuitUsuario', 'nombreUsuario', 'apellidoUsuario', 'NRegistro',
@@ -65,7 +65,7 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
 
       const usuarioId = resultadoUsuario[0].id;
 
-      const { comercioFitosanitario,cuit1, adquiriente, cuit2, domicilio, predio, superficie, cultivo, cultivoOtro, diagnostico, recomendacion, mailEmpresa,agroquimicos } = req.body;
+      const { comercioFitosanitario, cuit1, adquiriente, cuit2, domicilio, predio, superficie, cultivo, cultivoOtro, diagnostico, recomendacion, mailEmpresa, agroquimicos } = req.body;
 
       //si cultivo viene vacio, utilizo cultivoOtro
       const cultivoElegido = cultivo || cultivoOtro;
@@ -146,43 +146,67 @@ const generarRecetaComercializadoraPdf = async (req, res) => {
     //si cultivo viene vacio, utilizo cultivoOtro
     const cultivoElegido = cultivo || cultivoOtro;
 
-    // Cargar la plantilla PDF
+    // 1. Cargamos la plantilla original como base limpia
     const plantillaBytes = fs.readFileSync('receta_agronomica_comercializadora.pdf');
-    const pdfDoc = await PDFDocument.load(plantillaBytes);
-    const page = pdfDoc.getPage(0);
+    const templateDoc = await PDFDocument.load(plantillaBytes);
 
+    // Creamos el documento final y copiamos las 2 páginas originales (0 = formulario, 1 = info)
+    const pdfDoc = await PDFDocument.create();
+    // Copiamos desde templateDoc: 3 copias de la página 0 (formulario) y 1 de la página 1 (info)
+    // copyPages agrega automáticamente las páginas copiadas a pdfDoc en el orden del array
+    const [page1, page2, page3, pageInfo] = await pdfDoc.copyPages(templateDoc, [0, 0, 0, 1]);
+
+    // Dibujamos los datos en page1
     const asesor = `${nombreUsuario || ""} ${apellidoUsuario || ""}`.trim();
-
     const comercioFitosanitarios = comercioFitosanitario.trim();
     const adquirientes = adquiriente.trim();
     const fecha = new Date().getDate() + '/' + (new Date().getMonth() + 1) + '/' + new Date().getFullYear();
 
-    page.drawText(String(fecha || ""), { x: 450, y: 709, size: 12 });
-    page.drawText(String(numeroRecetaStr || ""), { x: 500, y: 659, size: 12 });
-    page.drawText(String(comercioFitosanitarios || ""), { x: 137, y: 634, size: 12 });
-    page.drawText(String(cuit1 || ""), { x: 403, y: 634, size: 12 });
-    page.drawText(String(adquirientes || ""), { x: 90, y: 609, size: 12 });
-    page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
-    page.drawText(String(domicilio || ""), { x: 74, y: 584, size: 12 });
-    page.drawText(String(predio || ""), { x: 177, y: 559, size: 12 });
-    page.drawText(String(superficie || "") + " km²", { x: 77, y: 534, size: 12 });
-    page.drawText(String(cultivoElegido || ""), { x: 101, y: 509, size: 12 });
-    page.drawText(String(diagnostico || ""), { x: 84, y: 484, size: 12 });
-    page.drawText(String(recomendacion || ""), { x: 159, y: 252, size: 12 });
-    page.drawText(String(asesor || ""), { x: 420, y: 145, size: 12 });
-    page.drawText(String(cuitUsuario || ""), { x: 420, y: 130, size: 12 });
+    // Función auxiliar para rellenar todos los datos en una hoja
+    const rellenarHoja = (page) => {
+      page.drawText(String(fecha || ""), { x: 450, y: 709, size: 12 });
+      page.drawText(String(numeroRecetaStr || ""), { x: 500, y: 659, size: 12 });
+      page.drawText(String(comercioFitosanitarios || ""), { x: 137, y: 634, size: 12 });
+      page.drawText(String(cuit1 || ""), { x: 403, y: 634, size: 12 });
+      page.drawText(String(adquirientes || ""), { x: 90, y: 609, size: 12 });
+      page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
+      page.drawText(String(domicilio || ""), { x: 74, y: 584, size: 12 });
+      page.drawText(String(predio || ""), { x: 177, y: 559, size: 12 });
+      page.drawText(String(superficie || "") + " km²", { x: 77, y: 534, size: 12 });
+      page.drawText(String(cultivoElegido || ""), { x: 101, y: 509, size: 12 });
+      page.drawText(String(diagnostico || ""), { x: 84, y: 484, size: 12 });
+      page.drawText(String(recomendacion || ""), { x: 159, y: 252, size: 12 });
+      page.drawText(String(asesor || ""), { x: 420, y: 145, size: 12 });
+      page.drawText(String(cuitUsuario || ""), { x: 420, y: 130, size: 12 });
 
-    let startY = 400; // Posición inicial para los agroquímicos
-    const lineHeight = 15;
-    if (agroquimicos && Array.isArray(agroquimicos)) {
-      agroquimicos.forEach((agro, index) => {
-        const y = startY - (index * lineHeight);
-        page.drawText(String(agro.principioActivo || ""), { x: 45, y, size: 12 });
-        page.drawText(String(agro.nomencComercial || ""), { x: 221, y, size: 12 });
-        page.drawText(String(agro.dosis || "") + " ml", { x: 414, y, size: 12 });
-        page.drawText(String(agro.cantidadTotal || "") + " lt", { x: 499, y, size: 12 });
-      });
-    }
+      let startY = 400;
+      const lineHeight = 15;
+      if (agroquimicos && Array.isArray(agroquimicos)) {
+        agroquimicos.forEach((agro, index) => {
+          const y = startY - (index * lineHeight);
+          page.drawText(String(agro.principioActivo || ""), { x: 45, y, size: 12 });
+          page.drawText(String(agro.nomencComercial || ""), { x: 221, y, size: 12 });
+          page.drawText(String(agro.dosis || "") + " ml", { x: 414, y, size: 12 });
+          page.drawText(String(agro.cantidadTotal || "") + " lt", { x: 499, y, size: 12 });
+        });
+      }
+    };
+
+    // 2. Rellenamos cada una de las 3 hojas de recibo
+    rellenarHoja(page1);
+    rellenarHoja(page2);
+    rellenarHoja(page3);
+
+    // 3. Rotulamos cada copia en su propia instancia
+    page1.drawText("ORIGINAL", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+    page2.drawText("DUPLICADO", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+    page3.drawText("TRIPLICADO", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+
+    // 4. Agregamos las páginas en el orden final (4 hojas)
+    pdfDoc.addPage(page1);
+    pdfDoc.addPage(page2);
+    pdfDoc.addPage(page3);
+    pdfDoc.addPage(pageInfo);
 
     const pdfResultadoBytes = await pdfDoc.save();
 

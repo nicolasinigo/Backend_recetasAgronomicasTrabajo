@@ -91,7 +91,7 @@ const generarRecetaPdf = async (req, res) => {
         aplicadora,
         categoriaAplicadora,
         cuit3,
-        pilotoApellido, 
+        pilotoApellido,
         pilotoNombres,
         cuit4,
         tipoMaquina,
@@ -148,9 +148,16 @@ const generarRecetaPdf = async (req, res) => {
     }
 
     // 5. Generar el PDF usando idReceta
+    // 1. Cargamos la plantilla original como base limpia
     const plantillaBytes = fs.readFileSync('receta_agronomica.pdf');
-    const pdfDoc = await PDFDocument.load(plantillaBytes);
-    const page = pdfDoc.getPage(0);
+    const templateDoc = await PDFDocument.load(plantillaBytes);
+
+    //2. Creamos el documento final y copiamos las 2 páginas originales (0 = formulario, 1 = info)
+    const pdfDoc = await PDFDocument.create();
+
+    //3. Copiamos desde templateDoc: 3 copias de la página 0 (formulario) y 1 de la página 1 (info)
+    // copyPages agrega automáticamente las páginas copiadas a pdfDoc en el orden del array
+    const [page1, page2, page3, pageInfo] = await pdfDoc.copyPages(templateDoc, [0, 0, 0, 1]);
 
     const asesor = `${asesorApellido || ""} ${asesorNombres || ""}`.trim();
     const piloto = `${pilotoApellido || ""} ${pilotoNombres || ""}`.trim();
@@ -159,40 +166,60 @@ const generarRecetaPdf = async (req, res) => {
 
     const fechaAplicacion = `${fechaCreacion.getDate().toString().padStart(2, '0')}/${(fechaCreacion.getMonth() + 1).toString().padStart(2, '0')} - ${fechaVencimiento.getDate().toString().padStart(2, '0')}/${(fechaVencimiento.getMonth() + 1).toString().padStart(2, '0')}/${fechaVencimiento.getFullYear()}`;
 
-    page.drawText(String(fechaAplicacion || ""), { x: 450, y: 709, size: 12 });
-    page.drawText(String(idReceta || ""), { x: 500, y: 659, size: 12 });
-    page.drawText(String(asesor || ""), { x: 100, y: 634, size: 12 });
-    page.drawText(String(NRegistro || ""), { x: 403, y: 634, size: 12 });
-    page.drawText(String(empresaProductora || ""), { x: 130, y: 609, size: 12 });
-    page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
-    page.drawText(String(aplicadora || ""), { x: 85, y: 584, size: 12 });
-    page.drawText(String(cuit3 || ""), { x: 403, y: 584, size: 12 });
-    page.drawText(String(categoriaAplicadora || ""), { x: 80, y: 559, size: 12 });
-    page.drawText(String(piloto || ""), { x: 110, y: 535, size: 12 });
-    page.drawText(String(cuit4 || ""), { x: 403, y: 535, size: 12 });
-    page.drawText(String(tipoMaquinaModelo || ""), { x: 120, y: 509, size: 12 });
-    page.drawText(String(matricula || ""), { x: 403, y: 509, size: 12 });
-    page.drawText(String(domicilio || ""), { x: 74, y: 484, size: 12 });
-    page.drawText(String(predio || ""), { x: 175, y: 460, size: 12 });
-    page.drawText(String(gps || ""), { x: 403, y: 459, size: 12 });
-    page.drawText(String(superficie || "") + " km²", { x: 77, y: 435, size: 12 });
-    page.drawText(String(cultivo || ""), { x: 100, y: 410, size: 12 });
-    page.drawText(String(diagnostico || ""), { x: 403, y: 409, size: 12 });
-    page.drawText(String(recomendacion || ""), { x: 158, y: 178, size: 12 });
-    page.drawText(String(asesor || ""), { x: 420, y: 120, size: 12 });
-    page.drawText(String(cuit1 || ""), { x: 420, y: 105, size: 12 });
+    //4. Función auxiliar para rellenar todos los datos en una hoja
+    const rellenarHoja = (page) => {
+      page.drawText(String(fechaAplicacion || ""), { x: 450, y: 709, size: 12 });
+      page.drawText(String(idReceta || ""), { x: 500, y: 659, size: 12 });
+      page.drawText(String(asesor || ""), { x: 100, y: 634, size: 12 });
+      page.drawText(String(NRegistro || ""), { x: 403, y: 634, size: 12 });
+      page.drawText(String(empresaProductora || ""), { x: 130, y: 609, size: 12 });
+      page.drawText(String(cuit2 || ""), { x: 403, y: 609, size: 12 });
+      page.drawText(String(aplicadora || ""), { x: 85, y: 584, size: 12 });
+      page.drawText(String(cuit3 || ""), { x: 403, y: 584, size: 12 });
+      page.drawText(String(categoriaAplicadora || ""), { x: 80, y: 559, size: 12 });
+      page.drawText(String(piloto || ""), { x: 110, y: 535, size: 12 });
+      page.drawText(String(cuit4 || ""), { x: 403, y: 535, size: 12 });
+      page.drawText(String(tipoMaquinaModelo || ""), { x: 120, y: 509, size: 12 });
+      page.drawText(String(matricula || ""), { x: 403, y: 509, size: 12 });
+      page.drawText(String(domicilio || ""), { x: 74, y: 484, size: 12 });
+      page.drawText(String(predio || ""), { x: 175, y: 460, size: 12 });
+      page.drawText(String(gps || ""), { x: 403, y: 459, size: 12 });
+      page.drawText(String(superficie || "") + " km²", { x: 77, y: 435, size: 12 });
+      page.drawText(String(cultivo || ""), { x: 100, y: 410, size: 12 });
+      page.drawText(String(diagnostico || ""), { x: 403, y: 409, size: 12 });
+      page.drawText(String(recomendacion || ""), { x: 158, y: 178, size: 12 });
+      page.drawText(String(asesor || ""), { x: 420, y: 120, size: 12 });
+      page.drawText(String(cuit1 || ""), { x: 420, y: 105, size: 12 });
 
-    let startY = 328;
-    const lineHeight = 15;
-    if (agroquimicos && Array.isArray(agroquimicos)) {
-      agroquimicos.forEach((agro, index) => {
-        const y = startY - (index * lineHeight);
-        page.drawText(String(agro.principioActivo || ""), { x: 45, y, size: 12 });
-        page.drawText(String(agro.nomencComercial || ""), { x: 221, y, size: 12 });
-        page.drawText(String(agro.dosis || "") + " ml", { x: 414, y, size: 12 });
-        page.drawText(String(agro.cantidadTotal || "") + " lt", { x: 499, y, size: 12 });
-      });
+      let startY = 328;
+      const lineHeight = 15;
+      if (agroquimicos && Array.isArray(agroquimicos)) {
+        agroquimicos.forEach((agro, index) => {
+          const y = startY - (index * lineHeight);
+          page.drawText(String(agro.principioActivo || ""), { x: 45, y, size: 12 });
+          page.drawText(String(agro.nomencComercial || ""), { x: 221, y, size: 12 });
+          page.drawText(String(agro.dosis || "") + " ml", { x: 414, y, size: 12 });
+          page.drawText(String(agro.cantidadTotal || "") + " lt", { x: 499, y, size: 12 });
+        });
+      }
     }
+
+    // 5. Rellenamos cada una de las 3 hojas de recibo
+    rellenarHoja(page1);
+    rellenarHoja(page2);
+    rellenarHoja(page3);
+
+    // 6. Rotulamos cada copia en su propia instancia
+    page1.drawText("ORIGINAL", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+    page2.drawText("DUPLICADO", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+    page3.drawText("TRIPLICADO", { x: 45, y: 750, size: 10, color: rgb(0.4, 0.4, 0.4) });
+
+
+    // 7. Agregamos las páginas en el orden final (4 hojas)
+    pdfDoc.addPage(page1);
+    pdfDoc.addPage(page2);
+    pdfDoc.addPage(page3);
+    pdfDoc.addPage(pageInfo);
 
     const pdfResultadoBytes = await pdfDoc.save();
 
@@ -216,7 +243,7 @@ const generarRecetaPdf = async (req, res) => {
     }
 
     // 7. link de confirmación para el correo
-    const linkConfirmacion = `http://${process.env.FRONTEND_URL_PRODUCCION}/receta/${idReceta}`;
+    const linkConfirmacion = `https://${process.env.FRONTEND_URL_PRODUCCION}/receta/${idReceta}`;
     //link de prueba: http://localhost:3000/receta/${idReceta}
     //const linkConfirmacion = `http://localhost:3000/receta/${idReceta}`;
 
